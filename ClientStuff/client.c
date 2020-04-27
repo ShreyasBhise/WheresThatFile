@@ -11,6 +11,28 @@
 char* ipaddress;
 int port;
 
+int connectToServer(){
+	int sfd=-1;
+	struct sockaddr_in serverAddressInfo;
+	struct hostent *serverIPAddress;
+	serverIPAddress = gethostbyname(ipaddress);
+	sfd = socket(AF_INET, SOCK_STREAM, 0);
+	if(sfd<0){
+		printf("Error: creating socket failed\n");
+		exit(1);
+	}
+	bzero((char*) &serverAddressInfo, sizeof(serverAddressInfo));
+	serverAddressInfo.sin_family = AF_INET;
+	serverAddressInfo.sin_port = htons(port);
+	bcopy((char*)serverIPAddress->h_addr, (char*)&serverAddressInfo.sin_addr.s_addr, serverIPAddress->h_length);
+	if(connect(sfd, (struct sockaddr *)&serverAddressInfo, sizeof(serverAddressInfo))<0){
+		printf("Error connecting to server\n");
+		exit(1);
+	}
+	printf("Connected to Server\n");
+	return sfd;
+}
+
 void getconfig(){
 	int fd = open("./.configure", O_RDONLY);
 	if(fd<0){
@@ -67,35 +89,33 @@ int checkinput(int argc, char** argv){
 			config(argv);
 			return 0;
 		}
+		else if(strcmp(argv[1], "create")==0 && argc==3){
+			return 1;
+		}
+		else if(strcmp(argv[1], "destroy")==0 && argc==3){
+			return 2;
+		}
 	}
-	return 0;
+	return -1;
 }
 
 int main(int argc, char** argv){
-	checkinput(argc, argv);
+	int type = checkinput(argc, argv);
+	if(type==0) return 0;
+	else if(type==-1){
+		printf("Error: Invalid Input");
+		return 1;
+	}
 	getconfig();
-	printf("%s\t%d\n", ipaddress, port);
-	int sfd=-1;
+//	printf("%s\t%d\n", ipaddress, port);
+	int sfd = connectToServer();
 	char* buffer = (char*)malloc(256);
-	char* message = "Hello Bapu";
-	struct sockaddr_in serverAddressInfo;
-	struct hostent *serverIPAddress;
-	serverIPAddress = gethostbyname(ipaddress);
-	sfd = socket(AF_INET, SOCK_STREAM, 0);
-	if(sfd<0){
-		printf("Error: creating socket failed\n");
-		exit(1);
-	}
-	bzero((char*) &serverAddressInfo, sizeof(serverAddressInfo));
-	serverAddressInfo.sin_family = AF_INET;
-	serverAddressInfo.sin_port = htons(port);
-	bcopy((char*)serverIPAddress->h_addr, (char*)&serverAddressInfo.sin_addr.s_addr, serverIPAddress->h_length);
-	if(connect(sfd, (struct sockaddr *)&serverAddressInfo, sizeof(serverAddressInfo))<0){
-		printf("Error connecting to server");
-	}
+	char* message = "hello there";
 	int n = write(sfd, message, strlen(message)+1);
 	bzero(buffer, 256);
-	n = read(sfd, buffer, 256);
+	n = read(sfd, buffer, 128);
 	printf("%s\n", buffer);
+	close(sfd);
+	printf("Disconnected from Server\n");
 	return 0;
 }
