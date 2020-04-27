@@ -3,6 +3,47 @@
 #include<string.h>
 #include<unistd.h>
 #include<fcntl.h>
+#include<sys/types.h>
+#include<sys/socket.h>
+#include<netinet/in.h>
+#include<netdb.h>
+
+char* ipaddress;
+int port;
+
+void getconfig(){
+	int fd = open("./.configure", O_RDONLY);
+	if(fd<0){
+		printf("Error: failed to open .configure file");
+		exit(1);
+	}
+	int curr = 0;
+	char c;
+	ipaddress = (char*)malloc(256);
+	char* portstr = (char*)malloc(10);
+	int mode = 0;
+	int n=0;
+	while((n = read(fd, &c, 1))!=0){
+		if(c=='\t'){
+			mode = 1;
+			ipaddress[curr]='\0';
+			curr = 0;
+			continue;
+		}
+		else if(c=='\n'){
+			portstr[curr]='\0';
+			port = atoi(portstr);
+			free(portstr);
+			break;
+		} else if (mode==0){
+			ipaddress[curr]=c;
+		} else if (mode==1){
+			portstr[curr]=c;
+		}
+		curr++;
+	}
+	return;
+}
 
 void config(char** argv){
 	printf("configuring ip");
@@ -27,9 +68,34 @@ int checkinput(int argc, char** argv){
 			return 0;
 		}
 	}
+	return 0;
 }
 
 int main(int argc, char** argv){
 	checkinput(argc, argv);
+	getconfig();
+	printf("%s\t%d\n", ipaddress, port);
+	int sfd=-1;
+	char* buffer = (char*)malloc(256);
+	char* message = "Hello Bapu";
+	struct sockaddr_in serverAddressInfo;
+	struct hostent *serverIPAddress;
+	serverIPAddress = gethostbyname(ipaddress);
+	sfd = socket(AF_INET, SOCK_STREAM, 0);
+	if(sfd<0){
+		printf("Error: creating socket failed\n");
+		exit(1);
+	}
+	bzero((char*) &serverAddressInfo, sizeof(serverAddressInfo));
+	serverAddressInfo.sin_family = AF_INET;
+	serverAddressInfo.sin_port = htons(port);
+	bcopy((char*)serverIPAddress->h_addr, (char*)&serverAddressInfo.sin_addr.s_addr, serverIPAddress->h_length);
+	if(connect(sfd, (struct sockaddr *)&serverAddressInfo, sizeof(serverAddressInfo))<0){
+		printf("Error connecting to server");
+	}
+	int n = write(sfd, message, strlen(message)+1);
+	bzero(buffer, 256);
+	n = read(sfd, buffer, 256);
+	printf("%s\n", buffer);
 	return 0;
 }
