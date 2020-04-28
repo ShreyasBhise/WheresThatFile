@@ -5,9 +5,98 @@
 #include<sys/stat.h>
 #include<string.h>
 #include<netinet/in.h>
+#include<pthread.h>
+#include<sys/types.h>
+#include<sys/stat.h>
+#include<fcntl.h>
+
 void error(char* msg) {
 	printf("ERROR: %s\n", msg);
 	exit(1);
+}
+char* getSize(int fd) {
+	int fileSize = lseek(fd, 0, SEEK_END);
+	lseek(fd, 0, SEEK_SET);
+	char* sizeStr = malloc(10 * sizeof(char)) ;
+	sprintf(sizeStr, "%d", fileSize);
+	return sizeStr;
+}
+void sendFile(int sockfd, int fd) {
+	int n;
+	char* size = getSize(fd);
+	int size1 = atoi(size);
+	write(sockfd, strcat(size, " "), size1+1);
+	printf("Sent back to client [%s ]\n", size);
+	char* buffer = malloc(size1 * sizeof(char) + 1);
+	n = read(fd, buffer, size1);
+	if (n <= 0) { error("could not read file.\n"); }
+
+	printf("Sent back to client [%s ]\n", buffer);
+	n = write(sockfd, buffer, size1);
+	
+
+}
+int projectExists(char* projectName) {
+	struct stat st;
+	if (stat(projectName, &st) != -1) { 
+		printf("Project already exists\n");
+		return 1;
+	}
+	return 0;	
+}
+
+int deleteProject(int sockfd) {
+	
+
+
+
+}
+int createProject(int sockfd) {
+	char buffer[256];
+	bzero(buffer, 256);
+	int n = 0;
+	while((n = read(sockfd, buffer, 255)) == 0)
+
+	if(n < 0) {error("Could not read from socket."); }
+	buffer[n] = '\0';
+	if(!projectExists(buffer)) {
+		write(sockfd, "1", 1);
+		mkdir(buffer, 0700);
+		printf("Created project [%s]\n", buffer);
+		strcat(buffer, "/.Manifest");
+		int fd = open(buffer, O_RDWR | O_CREAT, 00600);
+		write(fd, "0\n", 2);
+		sendFile(sockfd, fd);
+		return 0;
+	}
+	write(sockfd, "0", 1);
+	return 1;
+}
+
+void* clientConnect(void* clientSockfd) {
+	int sockfd = *((int *) clientSockfd);
+	char* operation = malloc(6 * sizeof(char));
+	char c;
+//	bzero(*operation, 6);
+	int n, curr = 0;
+	while (n = read(sockfd, &c, 1) >= 0) {
+		if(c == ' ') { break; }
+		operation[curr++] = c;
+	}
+	operation[curr] = '\0';
+	int op = atoi(operation);
+	switch(op) {
+		case 1: //Create
+			createProject(sockfd);
+			break;
+		case 2:
+			destroyProject(sockfd);
+			break;
+		default:
+			error("Invalid operation");
+			break;
+	}
+//	return (void *) &op;
 }
 int main(int argc, char** argv) {
 	int sockfd = -1; //fd for socket
@@ -40,16 +129,18 @@ int main(int argc, char** argv) {
 
 	clilen = sizeof(cAddrInfo);
 	while(1) {
-	newsockfd = accept(sockfd, (struct sockaddr *) &cAddrInfo, &clilen);
+		newsockfd = accept(sockfd, (struct sockaddr *) &cAddrInfo, &clilen);
 	
-	if(newsockfd < 0) { error("accept failed."); }
+		if(newsockfd < 0) { error("accept failed."); }
 	
-		bzero(buffer, 256);	
+	/*	bzero(buffer, 256);	
 		n = read(newsockfd, buffer, 255);
 		if(n < 0) {error("could not read from socket."); }
-	
-		printf("Here is the message: %s\n", buffer);
-		n = write(newsockfd, "yerr", 18);
+
+		printf("\"%s\"\n", buffer);
+		n = write(newsockfd, "yerr", 18); */
+		pthread_t newthread;
+		pthread_create(&newthread, NULL, &clientConnect, (void *)&newsockfd);
 		
 	}
 	return 0;
