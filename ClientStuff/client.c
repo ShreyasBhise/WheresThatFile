@@ -11,6 +11,60 @@
 char* ipaddress;
 int port;
 
+void readBytes(int sfd, int x, char* buffer){
+	int bytesRead = 0;
+	int n;
+	while(bytesRead<x){
+		n = read(sfd, buffer+bytesRead, x-bytesRead);
+		if(n<0){
+			printf("Error: unable to read file completely");
+			exit(1);
+		}
+		bytesRead+=n;
+	}
+	return;
+}
+
+int readFile(int sfd, char** buffer){
+	int n = 0;
+	char c;
+	char* sizeStr = (char *)malloc(256);
+	int curr = 0;
+	while((n=read(sfd, &c, 1))>=0){
+		if(c==' ') break;
+		sizeStr[curr++]=c;
+	}
+	sizeStr[curr]='\0';
+	int size = atoi(sizeStr);
+	*buffer = (char*)malloc(size);
+	readBytes(sfd, size, *buffer);
+	printf("%d bytes\n", size);
+	return size;
+}
+
+int createProject(int sfd, char* str){
+	int n = 0;
+	char* command = "1 ";
+	n = write(sfd, command, strlen(command));
+	n = write(sfd, str, strlen(str));
+//	printf("%s%s\n", command, str);
+	char c;
+	while((n=read(sfd, &c, 1))==0){
+	}
+	if(c=='0'){ // project already exists
+		printf("Error: Project already exists\n");
+		return 1;
+	} else if (c!='1'){
+		printf("Error\n");
+		return 1;
+	}
+	char** buffer = (char**)malloc(sizeof(char*));
+	int size = readFile(sfd, buffer);
+	printf("char 1: %c\n", buffer[0][0]);
+	printf("char 2: %c\n", buffer[0][1]);	
+	return 0;
+}
+
 int connectToServer(){
 	int sfd=-1;
 	struct sockaddr_in serverAddressInfo;
@@ -107,14 +161,11 @@ int main(int argc, char** argv){
 		return 1;
 	}
 	getconfig();
-//	printf("%s\t%d\n", ipaddress, port);
 	int sfd = connectToServer();
-	char* buffer = (char*)malloc(256);
-	char* message = "hello there";
-	int n = write(sfd, message, strlen(message)+1);
-	bzero(buffer, 256);
-	n = read(sfd, buffer, 128);
-	printf("%s\n", buffer);
+	if(type==1){ // create called
+		int n = createProject(sfd, argv[2]);	
+	}
+//	printf("%s\t%d\n", ipaddress, port);
 	close(sfd);
 	printf("Disconnected from Server\n");
 	return 0;
