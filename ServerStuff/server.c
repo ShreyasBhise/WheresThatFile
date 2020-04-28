@@ -23,42 +23,54 @@ char* getSize(int fd) {
 }
 void sendFile(int sockfd, int fd) {
 	int n;
-	char* size = getSize(fd);
-	int size1 = atoi(size);
-	write(sockfd, strcat(size, " "), size1+1);
-	printf("Sent back to client [%s ]\n", size);
-	char* buffer = malloc(size1 * sizeof(char) + 1);
-	n = read(fd, buffer, size1);
+	char* sizeStr = getSize(fd);
+	int size = atoi(sizeStr);
+	write(sockfd, strcat(sizeStr, " "), strlen(sizeStr) + 1);
+	printf("Sent back to client [%s ]\n", sizeStr);
+	char* buffer = malloc(size * sizeof(char) + 1);
+	n = read(fd, buffer, size);
 	if (n <= 0) { error("could not read file.\n"); }
 
-	printf("Sent back to client [%s ]\n", buffer);
-	n = write(sockfd, buffer, size1);
 	
+	n = write(sockfd, buffer, size);
+	printf("Sent back to client %d bytes [%s ]\n",size, buffer);
 
 }
 int projectExists(char* projectName) {
 	struct stat st;
 	if (stat(projectName, &st) != -1) { 
-		printf("Project already exists\n");
 		return 1;
 	}
 	return 0;	
 }
-
-int deleteProject(int sockfd) {
-	
-
-
-
-}
-int createProject(int sockfd) {
-	char buffer[256];
-	bzero(buffer, 256);
+char* getProjName(int sockfd) {
+	char* buffer = (char *) malloc(256);
 	int n = 0;
 	while((n = read(sockfd, buffer, 255)) == 0)
-
-	if(n < 0) {error("Could not read from socket."); }
+	if(n < 0) { error("Could not read from socket."); }
 	buffer[n] = '\0';
+	
+	return buffer;
+}
+int destroyProject(int sockfd) { /*Send 1 if the project exists, and will be deleted. 0 if the project doesn't exist */
+	char* buffer = getProjName(sockfd);
+	if(!projectExists(buffer)) {
+		printf("Project [%s] does not exist.\n", buffer);
+		write(sockfd, "0", 1);
+		return 0;	
+	}
+	printf("YERRRR\n");
+	char* sysCall = (char*) malloc(256);
+	strcat(sysCall, "rm -r ./");
+	strcat(sysCall, buffer);
+	system(sysCall);
+	printf("Deleted [./%s]\n", buffer); 
+	write(sockfd, "1", 1);
+	return 1;
+}
+int createProject(int sockfd) { /* Send 1 if the project does not exist, and a manifest is to be sent. 0 if project already exists. */
+	char* buffer = getProjName(sockfd);
+
 	if(!projectExists(buffer)) {
 		write(sockfd, "1", 1);
 		mkdir(buffer, 0700);
@@ -69,6 +81,7 @@ int createProject(int sockfd) {
 		sendFile(sockfd, fd);
 		return 0;
 	}
+	printf("Project already exists.\n");
 	write(sockfd, "0", 1);
 	return 1;
 }
