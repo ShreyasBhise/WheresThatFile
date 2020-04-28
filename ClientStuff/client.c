@@ -11,7 +11,7 @@
 char* ipaddress;
 int port;
 
-void readBytes(int sfd, int x, char* buffer){
+void readBytes(int sfd, int x, void* buffer){
 	int bytesRead = 0;
 	int n;
 	while(bytesRead<x){
@@ -31,15 +31,30 @@ int readFile(int sfd, char** buffer){
 	char* sizeStr = (char *)malloc(256);
 	int curr = 0;
 	while((n=read(sfd, &c, 1))>=0){
+		if(n==0) continue;
 		if(c==' ') break;
 		sizeStr[curr++]=c;
 	}
 	sizeStr[curr]='\0';
 	int size = atoi(sizeStr);
+	free(sizeStr);
 	*buffer = (char*)malloc(size);
-	readBytes(sfd, size, *buffer);
+	readBytes(sfd, size, (void*)*buffer);
 	printf("%d bytes\n", size);
 	return size;
+}
+
+int destroyProject(int sfd, char* str){
+	int n=0;
+	char* command = "2 ";
+	n = write(sfd, command, strlen(command));
+	n = write(sfd, str, strlen(str));
+	char c;
+	while((n=read(sfd, &c, 1))==0){
+	}
+	if(c=='1') printf("Project has been removed from the repository\n");
+	else printf("Error: Project does not exist in repository\n");
+	return 0;
 }
 
 int createProject(int sfd, char* str){
@@ -60,8 +75,13 @@ int createProject(int sfd, char* str){
 	}
 	char** buffer = (char**)malloc(sizeof(char*));
 	int size = readFile(sfd, buffer);
-	printf("char 1: %c\n", buffer[0][0]);
-	printf("char 2: %c\n", buffer[0][1]);	
+//	printf("%s", *buffer);
+	char* filebuffer = (char*)malloc(256);
+	strcpy(filebuffer, str);
+	mkdir(filebuffer, 0700);
+	strcat(filebuffer, "/.Manifest");
+	int fd = open(filebuffer, O_RDWR | O_CREAT, 00600);
+	write(fd, *buffer, size);
 	return 0;
 }
 
@@ -164,6 +184,8 @@ int main(int argc, char** argv){
 	int sfd = connectToServer();
 	if(type==1){ // create called
 		int n = createProject(sfd, argv[2]);	
+	} else if (type==2){ // destroy called
+		int n = destroyProject(sfd, argv[2]);
 	}
 //	printf("%s\t%d\n", ipaddress, port);
 	close(sfd);
