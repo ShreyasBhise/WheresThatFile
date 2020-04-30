@@ -96,5 +96,6 @@ node* readManifest(int fd){
 	}
 	free(curr);
 	if(prev==NULL) return NULL; // .manifest contains no entries
+	prev->next = NULL;
 	return root;
 }

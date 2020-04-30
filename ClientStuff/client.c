@@ -73,11 +73,15 @@ int isFileAdded(node* root, char* filePath) {
 	return 0;
 
 }
+void getPath(char* pName, char* fName, char* buffer) {
+	sprintf(buffer, "%s/%s", pName, fName);
+
+}
 int addFile(char* projName, char* fileName) {
-	char manifestPath[100];
-	char filePath[100];
-	sprintf(manifestPath, "%s/.Manifest", projName); 
-	sprintf(filePath, "%s/%s", projName, fileName);
+	char filePath[256];
+	char manifestPath[256];
+	getPath(projName, ".Manifest", manifestPath);
+	getPath(projName, fileName, filePath);
         
        	int manifest = open(manifestPath, O_RDWR | O_APPEND);
 	/*TODO: Check if the file exists in the Manifest */
@@ -109,6 +113,26 @@ int addFile(char* projName, char* fileName) {
 	
 	return 1;
 
+}
+int removeFile(char* projName, char* fileName) {
+	char filePath[256]; 
+	char manifestPath[256];
+        getPath(projName, ".Manifest", manifestPath);
+        getPath(projName, fileName, filePath);	
+	
+	int manifest = open(manifestPath, O_RDWR);
+	int x = readNum(manifest);
+	node* mList = readManifest(manifest);
+	
+	if(!isFileAdded(mList, filePath)) {
+		printf("File is not in manifest, cannot be removed.\n");
+		return 0;
+	}
+	char* manifestContents = readFile(manifest);
+	char* fileLoc = strstr(manifestContents, filePath);
+	*(fileLoc - 4) = 'D';
+	lseek(manifest, 0, SEEK_SET);
+	int n = write(manifest, manifestContents, strlen(manifestContents));
 }
 int destroyProject(int sfd, char* projName){
 	int n = 0;
@@ -239,6 +263,9 @@ int checkinput(int argc, char** argv){
 		else if(strcmp(argv[1], "add") == 0 && argc == 4) {
 			return 3;
 		}
+		else if(strcmp(argv[1], "remove") == 0 && argc == 4) {
+			return 4;
+		}
 	}
 	return -1;
 }
@@ -253,7 +280,11 @@ int main(int argc, char** argv){
 	if(type == 3) {
                 int n = addFile(argv[2], argv[3]);
 		return 0;
-        }
+        } 
+	else if(type == 4) {
+		int n = removeFile(argv[2], argv[3]);
+		return 0;
+	}
 	getconfig();
 	int sfd = connectToServer();
 	if(type==1){ // create called
