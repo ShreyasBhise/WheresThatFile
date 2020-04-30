@@ -9,5 +9,5 @@
 
 node* readManifest(int fd){
 	node* root = (node*)malloc(sizeof(node));
-	return node*;
+	return root;
 }
