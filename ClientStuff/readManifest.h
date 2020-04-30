@@ -9,7 +9,7 @@ typedef struct node{
 	char* hash;
 } node;
 
-int manifestVersion(int fd);
+int readNum(int fd);
 node* readManifest(int fd);
 
 #endif
