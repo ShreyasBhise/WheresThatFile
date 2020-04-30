@@ -7,12 +7,20 @@
 #include<string.h>
 #include"readManifest.h"
 
+void printManifest(node* root) {
+	node* ptr;
+	for(ptr = root; ptr != NULL; ptr = ptr->next) {
+		printf("%c %d %s %s\n", ptr->status, ptr->version, ptr->filePath, ptr->hash);
+
+	}
+
+}
 int readNum(int fd){
 	int n;
 	char* str = (char*)malloc(256);
 	char c;
 	int i = 0;
-	while((n=read(fd, &c, 1))>=0){
+	while((n=read(fd, &c, 1)) > 0){
 		if(n==0) continue;
 		if(n<0){
 			printf("Error: unable to read int");
@@ -33,7 +41,7 @@ char* readStr(int fd){
 	char* str = (char*)malloc(length);
 	char c;
 	int i = 0;
-	while((n=read(fd, &c, 1))>=0){
+	while((n=read(fd, &c, 1)) > 0){
 		if(n==0) continue;
 		if(n<0){
 			printf("Error: unable to read string");
@@ -55,27 +63,31 @@ char* readStr(int fd){
 		str[i]=c;
 		i++;
 	}
-	printf("Error: readStr not terminated by tab or newline");
+	printf("Error: readStr not terminated by tab or newline\n");
 	return str;
 }
 
 node* readManifest(int fd){
-	node* root = (node*)malloc(sizeof(node);
+	node* root = (node*)malloc(sizeof(node));
 	node* curr = root;
 	node* prev = NULL;
+	int count = 0, count2 = 0;
+//	lseek(fd, 2, SEEK_SET);
 	while(1){
-		char c;
+		char c[3];
 		int n;
-		while((n=read(fd, &c, 1))>=0){
-			if(n==0) continue;
-		}
-		if(n<0){
+		n=read(fd, &c, 2);
+		if(n<=0){
 			break;
 		}
-		curr->status = c;
+		c[2] = '\0';
+		curr->status = c[0];
 		curr->version = readNum(fd);
+		printf("Read version: %d.\n", curr->version);
 		curr->filePath = readStr(fd);
+		printf("Read filePath: %s.\n", curr->filePath);
 		curr->hash = readStr(fd);
+		printf("Read hash: %s.\n", curr->hash);
 		if(prev!=NULL){
 			prev->next = curr;
 		}

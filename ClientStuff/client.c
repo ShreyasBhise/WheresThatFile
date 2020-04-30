@@ -7,7 +7,8 @@
 #include<sys/socket.h>
 #include<netinet/in.h>
 #include<netdb.h>
-
+#include<openssl/md5.h>
+#include"readManifest.h"
 char* ipaddress;
 int port;
 
@@ -24,8 +25,19 @@ void readBytes(int sfd, int x, void* buffer){
 	}
 	return;
 }
+char* readFile(int fd) {
+	int fileSize = lseek(fd, 0, SEEK_END);
+	lseek(fd, 0, SEEK_SET);
 
-int readFile(int sfd, char** buffer){
+	char* fileContents = malloc(fileSize+1);
+	int n = read(fd, fileContents, fileSize);
+
+	if(n != fileSize) printf("Error reading the file.\n");
+	fileContents[n] = '\0';
+	return fileContents;
+
+}
+int readFileFromServer(int sfd, char** buffer){
 	int n = 0;
 	char c;
 	char* sizeStr = (char *)malloc(256);
@@ -43,25 +55,79 @@ int readFile(int sfd, char** buffer){
 	printf("%d bytes\n", size);
 	return size;
 }
+void getHash(char* toHash, unsigned char* fileHash) {
+	MD5_CTX c;
+        MD5_Init(&c);
+        MD5_Update(&c, toHash, strlen(toHash));
+        MD5_Final(fileHash, &c);
+}
+int isFileAdded(node* root, char* filePath) {
+	printf("File path in isFileAdded: %s\n", filePath);
+	node* ptr;
+	int count = 0;
+	for(ptr = root; ptr != NULL; ptr = ptr->next) {
+		printf("isFileAdded: %d %s\n", count++, ptr->filePath);
+		if(strcmp(ptr->filePath, filePath) == 0) 
+			return 1;	
+	}
+	return 0;
 
-int destroyProject(int sfd, char* str){
-	int n=0;
+}
+int addFile(char* projName, char* fileName) {
+	char manifestPath[100];
+	char filePath[100];
+	sprintf(manifestPath, "%s/.Manifest", projName); 
+	sprintf(filePath, "%s/%s", projName, fileName);
+        
+       	int manifest = open(manifestPath, O_RDWR | O_APPEND);
+	/*TODO: Check if the file exists in the Manifest */
+	int x = readNum(manifest);
+	printf("In addFile: %d\t%c\n", x, x);
+	node* mList = readManifest(manifest);
+	printf("created list\n");
+	
+	
+	if(isFileAdded(mList, filePath)) {
+		printf("File is already in manifest\n");
+		return 0;
+	}
+	int fileToAdd = open(filePath, O_RDONLY);
+	char* fileContents = readFile(fileToAdd);
+
+	unsigned char fileHash[MD5_DIGEST_LENGTH];
+	getHash(fileContents, fileHash);
+
+	int i;
+	char toWrite[256];
+	char hash[33];
+        
+	for(i = 0; i < MD5_DIGEST_LENGTH; i++) 
+		sprintf(&hash[i * 2], "%02x", (unsigned int) fileHash[i]);
+		
+	sprintf(toWrite, "A\t0\t%s\t%s\n", filePath, hash);
+	int n = write(manifest, toWrite, strlen(toWrite)); 
+	
+	return 1;
+
+}
+int destroyProject(int sfd, char* projName){
+	int n = 0;
 	char* command = "2 ";
 	n = write(sfd, command, strlen(command));
-	n = write(sfd, str, strlen(str));
+	n = write(sfd, projName, strlen(projName));
 	char c;
-	while((n=read(sfd, &c, 1))==0){
-	}
-	if(c=='1') printf("Project has been removed from the repository\n");
+	while((n=read(sfd, &c, 1))==0)
+	
+	if(c == '1') printf("Project has been removed from the repository\n");
 	else printf("Error: Project does not exist in repository\n");
 	return 0;
 }
 
-int createProject(int sfd, char* str){
+int createProject(int sfd, char* projName){
 	int n = 0;
 	char* command = "1 ";
 	n = write(sfd, command, strlen(command));
-	n = write(sfd, str, strlen(str));
+	n = write(sfd, projName, strlen(projName));
 //	printf("%s%s\n", command, str);
 	char c;
 	while((n=read(sfd, &c, 1))==0){
@@ -74,14 +140,15 @@ int createProject(int sfd, char* str){
 		return 1;
 	}
 	char** buffer = (char**)malloc(sizeof(char*));
-	int size = readFile(sfd, buffer);
+	int size = readFileFromServer(sfd, buffer);
 //	printf("%s", *buffer);
 	char* filebuffer = (char*)malloc(256);
-	strcpy(filebuffer, str);
+	strcpy(filebuffer, projName);
 	mkdir(filebuffer, 0700);
 	strcat(filebuffer, "/.Manifest");
 	int fd = open(filebuffer, O_RDWR | O_CREAT, 00600);
 	write(fd, *buffer, size);
+	write(fd, "\n", 1);
 	return 0;
 }
 
@@ -169,6 +236,9 @@ int checkinput(int argc, char** argv){
 		else if(strcmp(argv[1], "destroy")==0 && argc==3){
 			return 2;
 		}
+		else if(strcmp(argv[1], "add") == 0 && argc == 4) {
+			return 3;
+		}
 	}
 	return -1;
 }
@@ -180,12 +250,18 @@ int main(int argc, char** argv){
 		printf("Error: Invalid Input");
 		return 1;
 	}
+	if(type == 3) {
+                int n = addFile(argv[2], argv[3]);
+		return 0;
+        }
 	getconfig();
 	int sfd = connectToServer();
 	if(type==1){ // create called
 		int n = createProject(sfd, argv[2]);	
 	} else if (type==2){ // destroy called
 		int n = destroyProject(sfd, argv[2]);
+	} else if(type == 3) {
+		int n = addFile(argv[2], argv[3]);
 	}
 //	printf("%s\t%d\n", ipaddress, port);
 	close(sfd);
