@@ -9,6 +9,7 @@
 #include<sys/types.h>
 #include<sys/stat.h>
 #include<fcntl.h>
+#include"../ClientStuff/readManifest.h"
 
 void error(char* msg) {
 	printf("ERROR: %s\n", msg);
@@ -85,7 +86,17 @@ int createProject(int sockfd) { /* Send 1 if the project does not exist, and a m
 	write(sockfd, "0", 1);
 	return 1;
 }
+int currentVersion(int sockfd) {
+	char* buffer = getProjName(sockfd);
+	if(projectExists(buffer)) {
+		
+	
+	}
+	printf("Project does not exist on server.\n");	
+	write(sockfd, "0", 1);
+	return 1;
 
+}
 void* clientConnect(void* clientSockfd) {
 	int sockfd = *((int *) clientSockfd);
 	char* operation = malloc(6 * sizeof(char));
@@ -98,13 +109,16 @@ void* clientConnect(void* clientSockfd) {
 	}
 	operation[curr] = '\0';
 	int op = atoi(operation);
+	int n;
 	switch(op) {
 		case 1: //Create
-			createProject(sockfd);
+			n = createProject(sockfd);
 			break;
 		case 2:
-			destroyProject(sockfd);
+			n = destroyProject(sockfd);
 			break;
+		case 5:
+			n = currentVersion(sockfd);
 		default:
 			error("Invalid operation");
 			break;
@@ -146,12 +160,6 @@ int main(int argc, char** argv) {
 	
 		if(newsockfd < 0) { error("accept failed."); }
 	
-	/*	bzero(buffer, 256);	
-		n = read(newsockfd, buffer, 255);
-		if(n < 0) {error("could not read from socket."); }
-
-		printf("\"%s\"\n", buffer);
-		n = write(newsockfd, "yerr", 18); */
 		pthread_t newthread;
 		pthread_create(&newthread, NULL, &clientConnect, (void *)&newsockfd);
 		
