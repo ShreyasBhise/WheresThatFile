@@ -92,7 +92,7 @@ char* extractFileNameFromPath(char* path) {
 }
 int currentVersion(int sockfd) {
 	char* buffer = getProjName(sockfd);
-	
+	printf("%s\n", buffer);
 	
 	if(projectExists(buffer)) {
 		char manifestPath[256];
@@ -100,6 +100,10 @@ int currentVersion(int sockfd) {
 		int manfd = open(manifestPath, O_RDONLY);
 		int x = readNum(manfd);
 		node* root = readManifest(manfd);
+		char numElements[10];
+		sprintf(numElements, "%d\n", size);
+		write(sockfd, numElements, strlen(numElements));
+		printf("numElements: %s", numElements);
 		node* ptr;
 		for(ptr = root; ptr!= NULL; ptr = ptr->next) {
 			char toWrite[256];
@@ -107,9 +111,12 @@ int currentVersion(int sockfd) {
 			char version[6];
 			sprintf(version, "%d", ptr->version);
 			sprintf(toWrite, "%s\t%s\n", version, fileName);
+			printf("version and name: %s", toWrite);
 			write(sockfd, toWrite, strlen(toWrite));
-		
+	//		bzero(toWrite, 256);
+	//		bzero(version, 6);
 		}
+		return 0;
 	}
 	printf("Project does not exist on server.\n");	
 	write(sockfd, "0", 1);
@@ -138,6 +145,7 @@ void* clientConnect(void* clientSockfd) {
 			break;
 		case 5:
 			n = currentVersion(sockfd);
+			break;
 		default:
 			error("Invalid operation");
 			break;
@@ -146,7 +154,6 @@ void* clientConnect(void* clientSockfd) {
 }
 int main(int argc, char** argv) {
 	printf("Starting server\n");
-	printf("%s\n", extractFileNameFromPath("../ClientStuff/p36/file1.txt"));
 	int sockfd = -1; //fd for socket
 	int newsockfd = -1; //fd for client socket
 	int portno = -1; //server port to connect to

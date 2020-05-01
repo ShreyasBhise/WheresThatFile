@@ -68,6 +68,7 @@ char* readStr(int fd){
 }
 
 node* readManifest(int fd){
+	size = 0;
 	node* root = (node*)malloc(sizeof(node));
 	node* curr = root;
 	node* prev = NULL;
@@ -93,7 +94,9 @@ node* readManifest(int fd){
 		}
 		prev = curr;
 		curr = (node*)malloc(sizeof(node));
+		size++;
 	}
+	printf("%d\n", size);
 	free(curr);
 	if(prev==NULL) return NULL; // .manifest contains no entries
 	prev->next = NULL;

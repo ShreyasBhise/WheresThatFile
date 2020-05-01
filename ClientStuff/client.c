@@ -175,7 +175,24 @@ int createProject(int sfd, char* projName){
 	write(fd, "\n", 1);
 	return 0;
 }
-
+int currentVersion(int sfd, char* projName) {
+	int n = 0;
+	char* command = "5 ";
+	n = write(sfd, command, 2);
+	n = write(sfd, projName, strlen(projName));
+	char numElements[10];
+	while((n = read(sfd, numElements, 10)) == 0)
+	numElements[n] = '\0';
+	
+	int num = atoi(numElements);
+//	printf("%s %d", numElements, num);
+	int i;
+	for(i = 0; i < num; i++) {
+		int version = readNum(sfd);
+		char* name = readStr(sfd);
+		printf("%d\t%s\n", version, name);
+	}
+}
 int connectToServer(){
 	int sfd=-1;
 	struct sockaddr_in serverAddressInfo;
@@ -266,6 +283,9 @@ int checkinput(int argc, char** argv){
 		else if(strcmp(argv[1], "remove") == 0 && argc == 4) {
 			return 4;
 		}
+		else if(strcmp(argv[1], "currentversion") == 0 && argc == 3) {
+			return 5;
+		}
 	}
 	return -1;
 }
@@ -291,9 +311,9 @@ int main(int argc, char** argv){
 		int n = createProject(sfd, argv[2]);	
 	} else if (type==2){ // destroy called
 		int n = destroyProject(sfd, argv[2]);
-	} else if(type == 3) {
-		int n = addFile(argv[2], argv[3]);
-	}
+	} else if(type == 5) {
+		int n = currentVersion(sfd, argv[2]);
+	} 
 //	printf("%s\t%d\n", ipaddress, port);
 	close(sfd);
 	printf("Disconnected from Server\n");
