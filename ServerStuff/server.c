@@ -86,6 +86,10 @@ int createProject(int sockfd) { /* Send 1 if the project does not exist, and a m
 	write(sockfd, "0", 1);
 	return 1;
 }
+char* extractFileNameFromPath(char* path) {
+	char* fileName = strrchr(path, '/');
+	return (fileName + 1);
+}
 int currentVersion(int sockfd) {
 	char* buffer = getProjName(sockfd);
 	
@@ -97,11 +101,13 @@ int currentVersion(int sockfd) {
 		int x = readNum(manfd);
 		node* root = readManifest(manfd);
 		node* ptr;
-		for(ptr = root; ptr = ptr!= NULL: ptr = ptr->next) {
+		for(ptr = root; ptr!= NULL; ptr = ptr->next) {
+			char toWrite[256];
 			char* fileName = extractFileNameFromPath(ptr->filePath);
 			char version[6];
 			sprintf(version, "%d", ptr->version);
-			write();
+			sprintf(toWrite, "%s\t%s\n", version, fileName);
+			write(sockfd, toWrite, strlen(toWrite));
 		
 		}
 	}
@@ -115,14 +121,14 @@ void* clientConnect(void* clientSockfd) {
 	char* operation = malloc(6 * sizeof(char));
 	char c;
 //	bzero(*operation, 6);
-	int n, curr = 0;
+	int n; 
+	int curr = 0;
 	while (n = read(sockfd, &c, 1) >= 0) {
 		if(c == ' ') { break; }
 		operation[curr++] = c;
 	}
 	operation[curr] = '\0';
 	int op = atoi(operation);
-	int n;
 	switch(op) {
 		case 1: //Create
 			n = createProject(sockfd);
@@ -139,6 +145,8 @@ void* clientConnect(void* clientSockfd) {
 //	return (void *) &op;
 }
 int main(int argc, char** argv) {
+	printf("Starting server\n");
+	printf("%s\n", extractFileNameFromPath("../ClientStuff/p36/file1.txt"));
 	int sockfd = -1; //fd for socket
 	int newsockfd = -1; //fd for client socket
 	int portno = -1; //server port to connect to
