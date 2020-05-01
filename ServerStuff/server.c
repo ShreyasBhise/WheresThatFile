@@ -88,9 +88,22 @@ int createProject(int sockfd) { /* Send 1 if the project does not exist, and a m
 }
 int currentVersion(int sockfd) {
 	char* buffer = getProjName(sockfd);
-	if(projectExists(buffer)) {
-		
 	
+	
+	if(projectExists(buffer)) {
+		char manifestPath[256];
+		sprintf(manifestPath, "%s/.Manifest", buffer);	
+		int manfd = open(manifestPath, O_RDONLY);
+		int x = readNum(manfd);
+		node* root = readManifest(manfd);
+		node* ptr;
+		for(ptr = root; ptr = ptr!= NULL: ptr = ptr->next) {
+			char* fileName = extractFileNameFromPath(ptr->filePath);
+			char version[6];
+			sprintf(version, "%d", ptr->version);
+			write();
+		
+		}
 	}
 	printf("Project does not exist on server.\n");	
 	write(sockfd, "0", 1);
