@@ -9,8 +9,15 @@ typedef struct node{
 	char* hash;
 } node;
 
-int readNum(int fd);
 char* readStr(int fd);
+char* readStrP(char* file, int* i);
+int readNum(int fd);
+<<<<<<< HEAD
+char* readStr(int fd);
+=======
+int readNumP(char* file, int* i);
+>>>>>>> 1dcc1c7c7fdd0a8924d9f62efcbddcb4fb2042df
 node* readManifest(int fd);
+node* readManifestServer(char* file);
 
 #endif

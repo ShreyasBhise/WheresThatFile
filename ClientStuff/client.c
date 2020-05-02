@@ -4,6 +4,7 @@
 #include<unistd.h>
 #include<fcntl.h>
 #include<sys/types.h>
+#include<sys/stat.h>
 #include<sys/socket.h>
 #include<netinet/in.h>
 #include<netdb.h>
@@ -12,6 +13,14 @@
 char* ipaddress;
 int port;
 
+
+int projectExists(char* projectName){
+	struct stat st;
+	if(stat(projectName, &st) != -1){
+		return 1;
+	}
+	return 0;
+}
 void readBytes(int sfd, int x, void* buffer){
 	int bytesRead = 0;
 	int n;
@@ -44,7 +53,7 @@ int readFileFromServer(int sfd, char** buffer){
 	int curr = 0;
 	while((n=read(sfd, &c, 1))>=0){
 		if(n==0) continue;
-		if(c==' ') break;
+		if(c==' ' || c == '\t') break;
 		sizeStr[curr++]=c;
 	}
 	sizeStr[curr]='\0';
@@ -60,6 +69,7 @@ void getHash(char* toHash, unsigned char* fileHash) {
         MD5_Init(&c);
         MD5_Update(&c, toHash, strlen(toHash));
         MD5_Final(fileHash, &c);
+	return;
 }
 int isFileAdded(node* root, char* filePath) {
 	printf("File path in isFileAdded: %s\n", filePath);
@@ -75,7 +85,7 @@ int isFileAdded(node* root, char* filePath) {
 }
 void getPath(char* pName, char* fName, char* buffer) {
 	sprintf(buffer, "%s/%s", pName, fName);
-
+	return;
 }
 int addFile(char* projName, char* fileName) {
 	char filePath[256];
@@ -126,13 +136,14 @@ int removeFile(char* projName, char* fileName) {
 	
 	if(!isFileAdded(mList, filePath)) {
 		printf("File is not in manifest, cannot be removed.\n");
-		return 0;
+		return 1;
 	}
 	char* manifestContents = readFile(manifest);
 	char* fileLoc = strstr(manifestContents, filePath);
 	*(fileLoc - 4) = 'D';
 	lseek(manifest, 0, SEEK_SET);
 	int n = write(manifest, manifestContents, strlen(manifestContents));
+	return 0;
 }
 int destroyProject(int sfd, char* projName){
 	int n = 0;
@@ -193,6 +204,82 @@ int currentVersion(int sfd, char* projName) {
 		printf("%d\t%s\n", version, name);
 	}
 }
+int checkout(int sfd, char* projName){
+	if(projectExists(projName)){
+		printf("Error: project already exits\n");
+		write(sfd, "0 ", 2);
+		return 1;
+	}
+	int n = 0;
+	char* command = "6 ";
+	n = write(sfd, command, 2);
+	n = write(sfd, projName, strlen(projName));
+	char c;
+	n = read(sfd, &c, 1);
+	if(c!='1'){
+		printf("Error: unable to get project from server\n");
+		return 1;
+	}
+	int size = readNum(sfd);
+	char newName[256];
+	sprintf(newName, "%s.tar.gz", projName);
+	printf("%s\n", newName);
+	int fd = open(newName, O_RDWR | O_CREAT, 00600);
+	char* file = (char*)malloc(size+1);
+	readBytes(sfd, size, file);
+	n = write(fd, file, size);
+	char sysCall[256];
+	char rmCall[256];
+	sprintf(sysCall, "tar -xzf %s", newName);
+	sprintf(rmCall, "rm %s", newName);
+	system(sysCall);
+	system(rmCall);
+	return 0;
+}
+
+int commit(int sfd, char* projName){
+	char fileName[256];
+	sprintf(fileName, "%s/.Manifest", projName);
+	int fd = open(fileName, O_RDONLY);
+	if(fd==-1){
+		printf("Error: unable to open client .Manifest");
+		write(sfd, "0 ", 2);
+		return 1;
+	}
+	int projVersion = readNum(fd);
+	node* clientroot = readManifest(fd);
+	write(sfd, "7 ", 2);
+	write(sfd, projName, strlen(projName));
+	char c;
+	read(sfd, &c, 1);
+	if(c!='1'){
+		printf("Error: project does not exist on server\n");
+		return 1;
+	}
+	int size = readNum(sfd);
+	printf("size: %d\n", size);
+	int serverProjVersion = readNum(sfd);
+	printf("Server Project Version: %d\n", serverProjVersion);
+	node* serverroot = readManifest(sfd);
+	printf("test3\n");
+	printf("Client Manifest:\n");
+	printManifest(clientroot);
+	printf("Server Manifest:\n");
+	printManifest(serverroot);
+	if(serverProjVersion!=projVersion){
+		printf("Server and Client project versions do not match.\nPlease update local project first.\n");
+	}
+	char commitFile[256];
+	sprintf(commitFile, "%s/.Commit", projName);
+	int cfd = open(commitFile, O_RDWR | O_CREAT, 00600);
+	void printManifest(node* root) {
+	node* ptr;
+	for(ptr = clientroot; ptr != NULL; ptr = ptr->next) {
+		
+	}
+	return 0;
+}
+
 int connectToServer(){
 	int sfd=-1;
 	struct sockaddr_in serverAddressInfo;
@@ -250,13 +337,12 @@ void getconfig(){
 }
 
 void config(char** argv){
-	printf("configuring ip");
+	printf("configuring ip\n");
 	int fd = open("./.configure", O_WRONLY | O_CREAT, 00600);
 	if(fd<0){
 		printf("Error: failed to create .configure file");
 		exit(1);
 	}
-	printf(argv[2]);
 	write(fd, argv[2], strlen(argv[2]));
 	write(fd, "\t", 1);
 	write(fd, argv[3], strlen(argv[3]));
@@ -286,6 +372,12 @@ int checkinput(int argc, char** argv){
 		else if(strcmp(argv[1], "currentversion") == 0 && argc == 3) {
 			return 5;
 		}
+		else if(strcmp(argv[1], "checkout") == 0 && argc == 3) {
+			return 6;
+		}
+		else if(strcmp(argv[1], "commit") == 0 && argc == 3) {
+			return 7;
+		}
 	}
 	return -1;
 }
@@ -311,9 +403,13 @@ int main(int argc, char** argv){
 		int n = createProject(sfd, argv[2]);	
 	} else if (type==2){ // destroy called
 		int n = destroyProject(sfd, argv[2]);
-	} else if(type == 5) {
+	} else if(type == 5) { 
 		int n = currentVersion(sfd, argv[2]);
-	} 
+	} else if (type == 6) {
+		int n = checkout(sfd, argv[2]);
+	} else if (type == 7){ // commit called
+		int n = commit(sfd, argv[2]);
+	}
 //	printf("%s\t%d\n", ipaddress, port);
 	close(sfd);
 	printf("Disconnected from Server\n");
