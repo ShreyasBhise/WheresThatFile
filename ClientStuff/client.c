@@ -191,15 +191,11 @@ int currentVersion(int sfd, char* projName) {
 	char* command = "5 ";
 	n = write(sfd, command, 2);
 	n = write(sfd, projName, strlen(projName));
-	char numElements[10];
-	while((n = read(sfd, numElements, 10)) == 0)
-	numElements[n] = '\0';
-	
-	int num = atoi(numElements);
-	printf("%s %d", numElements, num);
+	int num = readNum(sfd);
+	printf("%d", num);
 	int i;
 	for(i = 0; i < num; i++) {
-		printf("loop number: %d", i);
+		printf("loop number: %d\n", i);
 		int version = readNum(sfd);
 		printf("%d\n", version);
 		char* name = readStr(sfd);
