@@ -123,6 +123,7 @@ node* readManifest(int fd){
 		if(n<=0){
 			break;
 		}
+		if(c[0]=='\n') break;
 		c[2] = '\0';
 		curr->status = c[0];
 		curr->version = readNum(fd);

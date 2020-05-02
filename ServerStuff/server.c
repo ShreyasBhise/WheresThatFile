@@ -22,7 +22,7 @@ char* getSize(int fd) {
 	sprintf(sizeStr, "%d", fileSize);
 	return sizeStr;
 }
-void sendFile(int sockfd, int fd) {
+void sendFile(int sockfd, int fd) { // sends the size of the file, a space, then the contents of the file
 	int n;
 	char* sizeStr = getSize(fd);
 	int size = atoi(sizeStr);
@@ -101,7 +101,7 @@ int currentVersion(int sockfd) {
 		int x = readNum(manfd);
 		node* root = readManifest(manfd);
 		char numElements[10];
-		sprintf(numElements, "%d\n", size);
+		sprintf(numElements, "%d\n", x);
 		write(sockfd, numElements, strlen(numElements));
 		printf("numElements: %s", numElements);
 		node* ptr;
@@ -122,6 +122,23 @@ int currentVersion(int sockfd) {
 	write(sockfd, "0", 1);
 	return 1;
 
+}
+int commit(int sockfd){
+	char* buffer = getProjName(sockfd);
+	printf("%s\n", buffer);
+	if(!projectExists(buffer)){
+		printf("Project does not exist on server.\n");
+		write(sockfd, "0", 1);
+		return 1;
+	}
+	printf("test\n");
+	write(sockfd, "1", 1);
+	char manifestPath[256];
+	sprintf(manifestPath, "%s/.Manifest", buffer);	
+	int manfd = open(manifestPath, O_RDONLY);
+	sendFile(sockfd, manfd);
+	write(sockfd, "\n\n", 2);
+	return 0;
 }
 void* clientConnect(void* clientSockfd) {
 	int sockfd = *((int *) clientSockfd);
@@ -145,6 +162,9 @@ void* clientConnect(void* clientSockfd) {
 			break;
 		case 5:
 			n = currentVersion(sockfd);
+			break;
+		case 7:
+			n = commit(sockfd);
 			break;
 		default:
 			error("Invalid operation");

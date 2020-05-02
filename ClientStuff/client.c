@@ -246,13 +246,26 @@ int commit(int sfd, char* projName){
 		write(sfd, "0 ", 2);
 		return 1;
 	}
+	int projVersion = readNum(fd);
 	node* clientroot = readManifest(fd);
-	write(sfd, "6 ", 2);
+	write(sfd, "7 ", 2);
+	write(sfd, projName, strlen(projName));
+	char c;
+	read(sfd, &c, 1);
+	if(c!='1'){
+		printf("Error: project does not exist on server\n");
+		return 1;
+	}
 	int size = readNum(sfd);
-	char* serverManifest = (char*)malloc(size+1);
-	readBytes(sfd, size, serverManifest);
-	serverManifest[size]='\n';
-	node* serverroot = readManifestServer(serverManifest);
+	printf("size: %d\n", size);
+	int serverProjVersion = readNum(sfd);
+	printf("Server Project Version: %d\n", serverProjVersion);
+	node* serverroot = readManifest(sfd);
+	printf("test3\n");
+	printf("Client Manifest:\n");
+	printManifest(clientroot);
+	printf("Server Manifest:\n");
+	printManifest(serverroot);
 	return 0;
 }
 
