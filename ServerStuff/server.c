@@ -26,7 +26,7 @@ void sendFile(int sockfd, int fd) {
 	int n;
 	char* sizeStr = getSize(fd);
 	int size = atoi(sizeStr);
-	write(sockfd, strcat(sizeStr, " "), strlen(sizeStr) + 1);
+	write(sockfd, strcat(sizeStr, "\t"), strlen(sizeStr) + 1);
 	printf("Sent back to client [%s ]\n", sizeStr);
 	char* buffer = malloc(size * sizeof(char) + 1);
 	n = read(fd, buffer, size);
@@ -60,12 +60,12 @@ int destroyProject(int sockfd) { /*Send 1 if the project exists, and will be del
 		write(sockfd, "0", 1);
 		return 0;	
 	}
-	printf("YERRRR\n");
+	
 	char* sysCall = (char*) malloc(256);
 	strcat(sysCall, "rm -r ./");
 	strcat(sysCall, buffer);
 	system(sysCall);
-	printf("Deleted [./%s]\n", buffer); 
+	
 	write(sockfd, "1", 1);
 	return 1;
 }
@@ -75,7 +75,7 @@ int createProject(int sockfd) { /* Send 1 if the project does not exist, and a m
 	if(!projectExists(buffer)) {
 		write(sockfd, "1", 1);
 		mkdir(buffer, 0700);
-		printf("Created project [%s]\n", buffer);
+		
 		strcat(buffer, "/.Manifest");
 		int fd = open(buffer, O_RDWR | O_CREAT, 00600);
 		write(fd, "0\n", 2);
@@ -92,7 +92,6 @@ char* extractFileNameFromPath(char* path) {
 }
 int currentVersion(int sockfd) {
 	char* buffer = getProjName(sockfd);
-	printf("%s\n", buffer);
 	
 	if(projectExists(buffer)) {
 		char manifestPath[256];
@@ -123,6 +122,30 @@ int currentVersion(int sockfd) {
 	return 1;
 
 }
+int checkout(int sockfd) {
+	char* pName = getProjName(sockfd);
+	
+	if(projectExists(pName)) { //If the project exists, compress it and send it to client.
+		write(sockfd, "1", 1);
+		char sysCall[256];
+		char tarName[25];
+		sprintf(tarName, "%s.tar.gz", pName);
+		sprintf(sysCall, "tar -czf %s ./%s", tarName, pName);
+		printf("tar file name: %s\n", tarName);
+		system(sysCall);
+		
+		int toSend = open(tarName, O_RDONLY);
+		sendFile(sockfd, toSend);
+		close(toSend);
+		bzero(sysCall, 256);
+		sprintf(sysCall, "rm %s", tarName);
+		system(sysCall);
+		return 1;
+		 	
+	}	
+	write(sockfd, "0", 1);
+	return 0;
+}
 void* clientConnect(void* clientSockfd) {
 	int sockfd = *((int *) clientSockfd);
 	char* operation = malloc(6 * sizeof(char));
@@ -137,6 +160,8 @@ void* clientConnect(void* clientSockfd) {
 	operation[curr] = '\0';
 	int op = atoi(operation);
 	switch(op) {
+		case 0:
+			break;
 		case 1: //Create
 			n = createProject(sockfd);
 			break;
@@ -145,6 +170,9 @@ void* clientConnect(void* clientSockfd) {
 			break;
 		case 5:
 			n = currentVersion(sockfd);
+			break;
+		case 6:
+			n = checkout(sockfd);
 			break;
 		default:
 			error("Invalid operation");
