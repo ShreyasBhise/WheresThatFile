@@ -196,11 +196,14 @@ int currentVersion(int sfd, char* projName) {
 	numElements[n] = '\0';
 	
 	int num = atoi(numElements);
-//	printf("%s %d", numElements, num);
+	printf("%s %d", numElements, num);
 	int i;
 	for(i = 0; i < num; i++) {
+		printf("loop number: %d", i);
 		int version = readNum(sfd);
+		printf("%d\n", version);
 		char* name = readStr(sfd);
+		printf("%s\n", name);
 		printf("%d\t%s\n", version, name);
 	}
 }
@@ -267,14 +270,20 @@ int commit(int sfd, char* projName){
 	printf("Server Manifest:\n");
 	printManifest(serverroot);
 	if(serverProjVersion!=projVersion){
-		printf("Server and Client project versions do not match.\nPlease update local project first.\n");
+		printf("Server and Client project versions do not match, please update local project.\n");
 	}
 	char commitFile[256];
 	sprintf(commitFile, "%s/.Commit", projName);
 	int cfd = open(commitFile, O_RDWR | O_CREAT, 00600);
-	void printManifest(node* root) {
 	node* ptr;
 	for(ptr = clientroot; ptr != NULL; ptr = ptr->next) {
+		char status = ptr->status;
+		switch(status) {
+			case 'M':
+			case 'A':
+			case 'D':
+				break;
+		}
 		
 	}
 	return 0;

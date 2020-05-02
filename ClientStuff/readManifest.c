@@ -11,7 +11,6 @@ void printManifest(node* root) {
 	node* ptr;
 	for(ptr = root; ptr != NULL; ptr = ptr->next) {
 		printf("%c %d %s %s\n", ptr->status, ptr->version, ptr->filePath, ptr->hash);
-
 	}
 
 }
@@ -110,7 +109,7 @@ char* readStrP(char* file, int* i){
 	return str;
 }
 node* readManifest(int fd){
-	int manifestSize = 0;
+	manifestSize = 0;
 	node* root = (node*)malloc(sizeof(node));
 	node* curr = root;
 	node* prev = NULL;
@@ -140,7 +139,6 @@ node* readManifest(int fd){
 		curr = (node*)malloc(sizeof(node));
 		manifestSize++;
 	}
-	printf("%d\n", manifestSize);
 	free(curr);
 	if(prev==NULL) return NULL; // .manifest contains no entries
 	prev->next = NULL;

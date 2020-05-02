@@ -100,9 +100,9 @@ int currentVersion(int sockfd) {
 		int x = readNum(manfd);
 		node* root = readManifest(manfd);
 		char numElements[10];
-		sprintf(numElements, "%d\n", x);
+		sprintf(numElements, "%d\n", manifestSize);
+		printf("num elements on server: %s\n", numElements);
 		write(sockfd, numElements, strlen(numElements));
-		printf("numElements: %s", numElements);
 		node* ptr;
 		for(ptr = root; ptr!= NULL; ptr = ptr->next) {
 			char toWrite[256];
@@ -110,10 +110,10 @@ int currentVersion(int sockfd) {
 			char version[6];
 			sprintf(version, "%d", ptr->version);
 			sprintf(toWrite, "%s\t%s\n", version, fileName);
-			printf("version and name: %s", toWrite);
+			printf("wrote to client [%s]", toWrite);
 			write(sockfd, toWrite, strlen(toWrite));
-	//		bzero(toWrite, 256);
-	//		bzero(version, 6);
+			bzero(toWrite, 256);
+			bzero(version, 6);
 		}
 		return 0;
 	}
@@ -144,7 +144,7 @@ int checkout(int sockfd) {
 		 	
 	}	
 	write(sockfd, "0", 1);
-
+}
 int commit(int sockfd){
 	char* buffer = getProjName(sockfd);
 	printf("%s\n", buffer);
