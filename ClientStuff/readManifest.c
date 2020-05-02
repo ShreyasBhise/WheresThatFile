@@ -68,7 +68,7 @@ char* readStr(int fd){
 }
 
 node* readManifest(int fd){
-	size = 0;
+	int size = 0;
 	node* root = (node*)malloc(sizeof(node));
 	node* curr = root;
 	node* prev = NULL;
