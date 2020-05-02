@@ -266,6 +266,17 @@ int commit(int sfd, char* projName){
 	printManifest(clientroot);
 	printf("Server Manifest:\n");
 	printManifest(serverroot);
+	if(serverProjVersion!=projVersion){
+		printf("Server and Client project versions do not match.\nPlease update local project first.\n");
+	}
+	char commitFile[256];
+	sprintf(commitFile, "%s/.Commit", projName);
+	int cfd = open(commitFile, O_RDWR | O_CREAT, 00600);
+	void printManifest(node* root) {
+	node* ptr;
+	for(ptr = clientroot; ptr != NULL; ptr = ptr->next) {
+		
+	}
 	return 0;
 }
 

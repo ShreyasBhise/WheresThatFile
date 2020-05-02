@@ -26,7 +26,7 @@ int readNum(int fd){
 			printf("Error: unable to read int");
 			exit(1);
 		}
-		if(c=='\n' || c=='\t') break;
+		if(c=='\n' || c=='\t' || c== ' ') break;
 		str[i]=c;
 		i++;
 	}
@@ -47,7 +47,7 @@ char* readStr(int fd){
 			printf("Error: unable to read string");
 			exit(1);
 		}
-		if(c=='\t' || c=='\n'){
+		if(c=='\t' || c=='\n' || c==' '){
 			str[i]='\0';
 			return str;
 		}
@@ -126,6 +126,7 @@ node* readManifest(int fd){
 		if(c[0]=='\n') break;
 		c[2] = '\0';
 		curr->status = c[0];
+		printf("Read status: %c.\n", curr->status);
 		curr->version = readNum(fd);
 		printf("Read version: %d.\n", curr->version);
 		curr->filePath = readStr(fd);
