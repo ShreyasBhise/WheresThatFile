@@ -122,7 +122,6 @@ int currentVersion(int sockfd) {
 	return 1;
 
 }
-<<<<<<< HEAD
 int checkout(int sockfd) {
 	char* pName = getProjName(sockfd);
 	
@@ -145,7 +144,7 @@ int checkout(int sockfd) {
 		 	
 	}	
 	write(sockfd, "0", 1);
-=======
+
 int commit(int sockfd){
 	char* buffer = getProjName(sockfd);
 	printf("%s\n", buffer);
@@ -161,7 +160,6 @@ int commit(int sockfd){
 	int manfd = open(manifestPath, O_RDONLY);
 	sendFile(sockfd, manfd);
 	write(sockfd, "\n\n", 2);
->>>>>>> 1dcc1c7c7fdd0a8924d9f62efcbddcb4fb2042df
 	return 0;
 }
 void* clientConnect(void* clientSockfd) {
@@ -189,13 +187,10 @@ void* clientConnect(void* clientSockfd) {
 		case 5:
 			n = currentVersion(sockfd);
 			break;
-<<<<<<< HEAD
 		case 6:
 			n = checkout(sockfd);
-=======
 		case 7:
 			n = commit(sockfd);
->>>>>>> 1dcc1c7c7fdd0a8924d9f62efcbddcb4fb2042df
 			break;
 		default:
 			error("Invalid operation");

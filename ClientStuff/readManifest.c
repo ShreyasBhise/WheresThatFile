@@ -110,7 +110,7 @@ char* readStrP(char* file, int* i){
 	return str;
 }
 node* readManifest(int fd){
-	int size = 0;
+	int manifestSize = 0;
 	node* root = (node*)malloc(sizeof(node));
 	node* curr = root;
 	node* prev = NULL;
@@ -138,9 +138,9 @@ node* readManifest(int fd){
 		}
 		prev = curr;
 		curr = (node*)malloc(sizeof(node));
-		size++;
+		manifestSize++;
 	}
-	printf("%d\n", size);
+	printf("%d\n", manifestSize);
 	free(curr);
 	if(prev==NULL) return NULL; // .manifest contains no entries
 	prev->next = NULL;
