@@ -236,6 +236,26 @@ int checkout(int sfd, char* projName){
 	system(rmCall);
 	return 0;
 }
+
+int commit(int sfd, char* projName){
+	char fileName[256];
+	sprintf(fileName, "%s/.Manifest", projName);
+	int fd = open(fileName, O_RDONLY);
+	if(fd==-1){
+		printf("Error: unable to open client .Manifest");
+		write(sfd, "0 ", 2);
+		return 1;
+	}
+	node* clientroot = readManifest(fd);
+	write(sfd, "6 ", 2);
+	int size = readNum(sfd);
+	char* serverManifest = (char*)malloc(size+1);
+	readBytes(sfd, size, serverManifest);
+	serverManifest[size]='\n';
+	node* serverroot = readManifestServer(serverManifest);
+	return 0;
+}
+
 int connectToServer(){
 	int sfd=-1;
 	struct sockaddr_in serverAddressInfo;
@@ -331,6 +351,9 @@ int checkinput(int argc, char** argv){
 		else if(strcmp(argv[1], "checkout") == 0 && argc == 3) {
 			return 6;
 		}
+		else if(strcmp(argv[1], "commit") == 0 && argc == 3) {
+			return 7;
+		}
 	}
 	return -1;
 }
@@ -360,6 +383,8 @@ int main(int argc, char** argv){
 		int n = currentVersion(sfd, argv[2]);
 	} else if (type == 6) {
 		int n = checkout(sfd, argv[2]);
+	} else if (type == 7){ // commit called
+		int n = commit(sfd, argv[2]);
 	}
 //	printf("%s\t%d\n", ipaddress, port);
 	close(sfd);
