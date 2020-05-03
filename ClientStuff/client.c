@@ -30,6 +30,7 @@ char* getSize(int fd) {
 	lseek(fd, 0, SEEK_SET);
 	char* sizeStr = (char *) malloc(10);
 	sprintf(sizeStr, "%d", fileSize);
+	return sizeStr;
 }
 void sendFile(int sockfd, int fd) {
 	int n;
@@ -43,6 +44,7 @@ void sendFile(int sockfd, int fd) {
 	
 	n = write(sockfd, buffer, size);
 	printf("Sent .Commit to server\n");
+	return;
 }
 void readBytes(int sfd, int x, void* buffer){
 	int bytesRead = 0;
@@ -335,11 +337,13 @@ int commit(int sfd, char* projName){
 				char* filecontents = readFile(fileToHash);
 				char* liveHash = getHash(filecontents); //This is the new hash of the file */
 				if(strcmp(liveHash, match->hash)==0) break;
-				else{
-					printf("M %s\n", ptr->filePath);
-					sprintf(commitbuffer, "M\t%d\t%s\t%s\n", ptr->version+1, ptr->filePath, ptr->hash);
-					write(cfd, commitbuffer, strlen(commitbuffer));
+				if(match->version>ptr->version){
+					printf("File version doesn't match for %s.\n", ptr->filePath);
+					return 1;
 				}
+				printf("M %s\n", ptr->filePath);
+				sprintf(commitbuffer, "M\t%d\t%s\t%s\n", ptr->version+1, ptr->filePath, ptr->hash);
+				write(cfd, commitbuffer, strlen(commitbuffer));
 				break;
 			case 'A' :
 				if(match!=NULL){
@@ -355,12 +359,18 @@ int commit(int sfd, char* projName){
 					printf("Asking to delete file that does not exist\n");
 					return 1;
 				}
+				if(match->version>ptr->version){
+					printf("File version doesn't match for %s.\n", ptr->filePath);
+					return 1;
+				}
 				printf("D %s\n", ptr->filePath);
 				sprintf(commitbuffer, "D\t%d\t%s\t%s\n", ptr->version+1, ptr->filePath, match->hash);
 				write(cfd, commitbuffer, strlen(commitbuffer));
 				break;
 		}
 	}
+	lseek(cfd, 0, SEEK_SET);
+	system("cat p3/.Commit");
 	sendFile(sfd, cfd);
 	return 0;
 }
