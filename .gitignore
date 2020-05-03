@@ -1,0 +1,3 @@
+*.o
+ClientStuff/WTF
+ServerStuff/WTFServer
