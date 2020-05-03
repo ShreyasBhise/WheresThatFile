@@ -11,7 +11,7 @@ char *getHash (char *toHash);
 int isFileAdded (node *root, char *filePath);
 node *getMatch (char *fileName, node *root);
 void getPath (char *pName, char *fName, char *buffer);
-int writeCommit(int fd, node* ptr, node* serverroot);
+int writeCommitFileClient(int fd, node* ptr, node* serverroot);
 
 int addFile (char *projName, char *fileName);
 int removeFile (char *projName, char *fileName);
