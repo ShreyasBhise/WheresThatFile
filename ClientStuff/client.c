@@ -72,7 +72,7 @@ char* getHash(char* toHash) {
         MD5_Final(fileHash, &c);
 	
 	int i;
-	char hash[33];	
+	char* hash = (char*)malloc(33);	
 	for( i = 0; i < MD5_DIGEST_LENGTH; i++)
 		sprintf(&hash[i * 2], "%02x", fileHash[i]);	
 	return hash;
@@ -294,8 +294,8 @@ int commit(int sfd, char* projName){
 				// creating ptr->hash 
 				int fileToHash = open(ptr->filePath, O_RDONLY);
 				char* filecontents = readFile(fileToHash);
-				char liveHash = getHash(filecontents); //This is the new hash of the file */
-				if(strcmp(ptr->hash, match->hash)==0) break;
+				char* liveHash = getHash(filecontents); //This is the new hash of the file */
+				if(strcmp(liveHash, match->hash)==0) break;
 				else{
 					printf("M %s\n", ptr->filePath);
 					sprintf(commitbuffer, "M\t%d\t%s\t%s\n", ptr->version+1, ptr->filePath, ptr->hash);
@@ -316,8 +316,8 @@ int commit(int sfd, char* projName){
 					printf("Asking to delete file that does not exist\n");
 					return 1;
 				}
-				printf("M %s\n", ptr->filePath);
-				sprintf(commitbuffer, "M\t%d\t%s\t%s\n", ptr->version+1, ptr->filePath, match->hash);
+				printf("D %s\n", ptr->filePath);
+				sprintf(commitbuffer, "D\t%d\t%s\t%s\n", ptr->version+1, ptr->filePath, match->hash);
 				write(cfd, commitbuffer, strlen(commitbuffer));
 				break;
 		}
