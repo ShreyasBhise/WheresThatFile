@@ -276,6 +276,7 @@ int commit(int sfd, char* projName){
 	sprintf(update, "%s/.Upgrade", projName);
 	if(fileExists(conflict) == 0) { 
 		printf("Error: Conflicts exist\n");
+		write(sfd, "0", 2);
 		return 0;
 	}
 	if(fileExists(update) == 0) {
@@ -283,6 +284,7 @@ int commit(int sfd, char* projName){
 		stat(update, &st);
 		if(st.st_size != 0) {
 			printf("Error: Client is behind the server, upgrade before you commit");
+			write(sfd, "0 ", 2);
 			return 0;
 		}
 	}
@@ -375,7 +377,34 @@ int commit(int sfd, char* projName){
 	sendFile(sfd, cfd);
 	return 0;
 }
-
+int pushCommit(int sfd, char* projName){
+	char commitName[256];
+	sprintf(commitName, "%s/.Commit", projName);
+	int fd = open(commitName, O_RDONLY);
+	if(fd==-1){
+		printf("Error: unable to open client .Commit");
+		write(sfd, "0 ", 2);
+		return 1;
+	}
+	write(sfd, "8 ", 2);
+	write(sfd, projName, strlen(projName));
+	char c;
+	read(sfd, &c, 1);
+	if(c!='1'){
+		printf("Error: project does not exist on server\n");
+		return 1;
+	}
+	sendFile(sfd, fd);
+	read(sfd, &c, 1);
+	if(c!='1'){
+		printf("Error: .Commit does not exist on server.");
+		return 1;
+	}
+	lseek(fd, 0, SEEK_SET);
+	node* commitRoot = readManifest(fd);
+	printManifest(commitRoot);
+	return 0;
+}
 int connectToServer(){
 	int sfd=-1;
 	struct sockaddr_in serverAddressInfo;
@@ -474,6 +503,9 @@ int checkinput(int argc, char** argv){
 		else if(strcmp(argv[1], "commit") == 0 && argc == 3) {
 			return 7;
 		}
+		else if(strcmp(argv[1], "push") == 0 && argc == 3){
+			return 8;
+		}
 	}
 	return -1;
 }
@@ -505,6 +537,8 @@ int main(int argc, char** argv){
 		int n = checkout(sfd, argv[2]);
 	} else if (type == 7){ // commit called
 		int n = commit(sfd, argv[2]);
+	} else if (type == 8){
+		int n = pushCommit(sfd, argv[2]);
 	}
 //	printf("%s\t%d\n", ipaddress, port);
 	close(sfd);

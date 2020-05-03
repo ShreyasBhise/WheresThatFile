@@ -13,16 +13,17 @@
 
 typedef struct commitNode{
 	char* file;
+	int size;
 	struct commitNode* next;
 } commitNode;
 
 typedef struct projNode {
 	char* projName;
-	commitNode* commitListRoot;
-	projNode* next;
+	struct commitNode* commitListRoot;
+	struct projNode* next;
 } projNode;
 
-projNode* root;
+projNode* projRoot;
 void error(char* msg) {
 	printf("ERROR: %s\n", msg);
 	exit(1);
@@ -30,11 +31,13 @@ void error(char* msg) {
 
 projNode* searchPNode(char* pName) { //Return pointer to the projectNode matching the project name that is given.
 	projNode* ptr;
-	for(ptr = root; ptr != NULL; ptr = ptr->next) {
+	for(ptr = projRoot; ptr != NULL; ptr = ptr->next) {
+		printf("pNode: %s\n", ptr->projName);
 		if(strcmp(pName, ptr->projName) == 0) {
 			return ptr;
 		}
 	}
+	return NULL;
 }
 char* getSize(int fd) {
 	int fileSize = lseek(fd, 0, SEEK_END);
@@ -178,7 +181,7 @@ int commit(int sockfd){
 	if(projCommitted == NULL) {
 		projCommitted = (projNode*) malloc(sizeof(projNode));
 		projCommitted->projName = buffer;
-		projCommitted->commitListRoot= (commitList*) malloc(sizeof(commitList));
+		projCommitted->commitListRoot = NULL;
 	}
 	printf("test\n");
 	write(sockfd, "1", 1);
@@ -188,20 +191,56 @@ int commit(int sockfd){
 	sendFile(sockfd, manfd);
 	write(sockfd, "\n\n", 2);
 	int size = readNum(sockfd);
-	char* commitFile = (char*)malloc(size);
+	char* commitFile = (char*)malloc(size+1);
 	int n = read(sockfd, commitFile, size);
+	commitFile[size]='\0';
 	commitNode* newnode = (commitNode*) malloc(sizeof(commitNode));
-	newnode->next = commitRoot;
-	commitRoot = newnode;
-	commitRoot->file = commitFile;
-	write(stdout, commitRoot->file, size);
+	newnode->next = projCommitted->commitListRoot;
+	projCommitted->commitListRoot = newnode;
+	newnode->file = commitFile;
+	newnode->size = size;
+	write(1, projCommitted->commitListRoot->file, size);
+	projCommitted->next = projRoot;
+	projRoot = projCommitted;
 	return 0;
 }
 int push(int sockfd) {
-	
-
-
-
+	char* buffer = getProjName(sockfd);
+	printf("%s\n", buffer);
+	if(!projectExists(buffer)){
+		printf("Project does not exist on server.\n");
+		write(sockfd, "0", 1);
+		return 1;
+	}
+	write(sockfd, "1", 1);
+	projNode* projCommitted = searchPNode(buffer);
+	if(projCommitted==NULL){
+		printf("2.Commit file does not match.\n");
+		write(sockfd, "0", 1);
+		return 1;
+	}
+	int x = readNum(sockfd);
+	char* commitFile = (char*)malloc(x+1);
+	int n = read(sockfd, commitFile, x);
+	commitFile[x]='\0';
+	commitNode* ptr = projCommitted->commitListRoot;
+	while(ptr!=NULL){
+		printf("%d, %d\n", ptr->size, x);
+		printf("%d\n", memcmp(ptr->file, commitFile, x));
+		if(ptr->size==x){
+			if(memcmp(ptr->file, commitFile, x)==0){
+				printf("break successful\n");
+				break;
+			}
+		}
+		ptr = ptr->next;
+	}
+	if(ptr==NULL){
+		printf(".Commit file does not match.\n");
+		write(sockfd, "0", 1);
+		return 1;
+	}
+	write(sockfd, "1", 1);
 
 	return 0;
 
@@ -246,7 +285,7 @@ void* clientConnect(void* clientSockfd) {
 //	return (void *) &op;
 }
 int main(int argc, char** argv) {
-	commitRoot = NULL;
+	projRoot = NULL;
 	printf("Starting server\n");
 	int sockfd = -1; //fd for socket
 	int newsockfd = -1; //fd for client socket
