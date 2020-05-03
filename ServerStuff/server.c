@@ -16,11 +16,25 @@ typedef struct commitNode{
 	struct commitNode* next;
 } commitNode;
 
-commitNode* commitRoot;
+typedef struct projNode {
+	char* projName;
+	commitNode* commitListRoot;
+	projNode* next;
+} projNode;
 
+projNode* root;
 void error(char* msg) {
 	printf("ERROR: %s\n", msg);
 	exit(1);
+}
+
+projNode* searchPNode(char* pName) { //Return pointer to the projectNode matching the project name that is given.
+	projNode* ptr;
+	for(ptr = root; ptr != NULL; ptr = ptr->next) {
+		if(strcmp(pName, ptr->projName) == 0) {
+			return ptr;
+		}
+	}
 }
 char* getSize(int fd) {
 	int fileSize = lseek(fd, 0, SEEK_END);
@@ -160,6 +174,12 @@ int commit(int sockfd){
 		write(sockfd, "0", 1);
 		return 1;
 	}
+	projNode* projCommitted = searchPNode(buffer);
+	if(projCommitted == NULL) {
+		projCommitted = (projNode*) malloc(sizeof(projNode));
+		projCommitted->projName = buffer;
+		projCommitted->commitListRoot= (commitList*) malloc(sizeof(commitList));
+	}
 	printf("test\n");
 	write(sockfd, "1", 1);
 	char manifestPath[256];
@@ -170,12 +190,21 @@ int commit(int sockfd){
 	int size = readNum(sockfd);
 	char* commitFile = (char*)malloc(size);
 	int n = read(sockfd, commitFile, size);
-	commitNode* newnode = (commitNode*)malloc(sizeof(commitNode));
+	commitNode* newnode = (commitNode*) malloc(sizeof(commitNode));
 	newnode->next = commitRoot;
 	commitRoot = newnode;
-	commitRoot->file=commitFile;
-	write(1, commitRoot->file, size);
+	commitRoot->file = commitFile;
+	write(stdout, commitRoot->file, size);
 	return 0;
+}
+int push(int sockfd) {
+	
+
+
+
+
+	return 0;
+
 }
 void* clientConnect(void* clientSockfd) {
 	int sockfd = *((int *) clientSockfd);
@@ -206,6 +235,9 @@ void* clientConnect(void* clientSockfd) {
 			n = checkout(sockfd);
 		case 7:
 			n = commit(sockfd);
+			break;
+		case 8:
+			n = push(sockfd);
 			break;
 		default:
 			error("Invalid operation");

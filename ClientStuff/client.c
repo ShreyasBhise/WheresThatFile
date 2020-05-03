@@ -63,6 +63,7 @@ char* readFile(int fd) {
 
 	char* fileContents = malloc(fileSize+1);
 	int n = read(fd, fileContents, fileSize);
+//This is a comment
 
 	if(n != fileSize) printf("Error reading the file.\n");
 	fileContents[n] = '\0';
