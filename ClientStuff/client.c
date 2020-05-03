@@ -25,6 +25,25 @@ int fileExists(char* filePath) {
 	return access(filePath, F_OK);	
 	//0 if file exists, -1 if not.
 }
+char* getSize(int fd) {
+	int fileSize = lseek(fd, 0, SEEK_END);
+	lseek(fd, 0, SEEK_SET);
+	char* sizeStr = (char *) malloc(10);
+	sprintf(sizeStr, "%d", fileSize);
+}
+void sendFile(int sockfd, int fd) {
+	int n;
+	char* sizeStr = getSize(fd);
+	int size = atoi(sizeStr);
+	write(sockfd, strcat(sizeStr, "\t"), strlen(sizeStr) + 1);
+	
+	char* buffer = (char*) malloc(size);
+	n = read(fd, buffer, size);
+	if (n <= 0) printf("Error: could not read file.");
+	
+	n = write(sockfd, buffer, size);
+	printf("Sent .Commit to server\n");
+}
 void readBytes(int sfd, int x, void* buffer){
 	int bytesRead = 0;
 	int n;
@@ -342,6 +361,7 @@ int commit(int sfd, char* projName){
 				break;
 		}
 	}
+	sendFile(sfd, cfd);
 	return 0;
 }
 
