@@ -314,6 +314,16 @@ int pushCommit(int sfd, char* projName){
 	sendFile(sfd, tarfd);
 	char cmd[64] = "rm push.tar.gz";
 	system(cmd);
+	char cmd2[128];
+	sprintf(cmd2, "rm %s/.Manifest", projName);
+	system(cmd2);
+	int size = readNum(sfd);
+	char* newMan = (char*)malloc(size);
+	char* manPath[128];
+	sprintf(manPath, "%s/.Manifest", projName);
+	int manfd = open(manPath, O_RDWR | O_CREAT, 00600);
+	readBytes(sfd, size, newMan);
+	write(manfd, newMan, size);
 	return 0;
 }
 int update(int sfd, char* projName) {
