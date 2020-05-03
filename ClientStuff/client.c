@@ -401,8 +401,30 @@ int pushCommit(int sfd, char* projName){
 		return 1;
 	}
 	lseek(fd, 0, SEEK_SET);
-	node* commitRoot = readManifest(fd);
+	node* commitRoot = readManifest(fd); // commit is now contained in linked list
 	printManifest(commitRoot);
+	node* ptr;
+	int elements = 0;
+	for(ptr = commitRoot; ptr!=NULL; ptr=ptr->next){
+		if(ptr->status=='M' || ptr->status=='A'){
+			elements++;
+		}
+	}
+	// need to handle 0 elements case separately.
+	char* fileNames = (char*)malloc(128*elements);
+	strcat(fileNames, "tar -czf push.tar.gz ");
+	for(ptr = commitRoot; ptr!=NULL; ptr=ptr->next){
+		if(ptr->status=='M' || ptr->status=='A'){
+			strcat(fileNames, ptr->filePath);
+			strcat(fileNames, " ");
+		}
+	}
+	printf("%s\n", fileNames);
+	system(fileNames); // creates tar file push.tar.gz
+	int tarfd = open("push.tar.gz", O_RDONLY);
+	sendFile(sfd, tarfd);
+	char cmd[64] = "rm push.tar.gz";
+	system(cmd);
 	return 0;
 }
 int connectToServer(){

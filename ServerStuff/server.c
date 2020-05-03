@@ -146,6 +146,14 @@ int currentVersion(int sockfd) {
 	return 1;
 
 }
+int getVersion(char* projName){
+	char manifestPath[256];
+	sprintf(manifestPath, "%s/.Manifest", projName);	
+	int manfd = open(manifestPath, O_RDONLY);
+	int x = readNum(manfd);
+	close(manfd);
+	return x;
+}
 int checkout(int sockfd) {
 	char* pName = getProjName(sockfd);
 	
@@ -240,8 +248,35 @@ int push(int sockfd) {
 		write(sockfd, "0", 1);
 		return 1;
 	}
+	int projNumber = getVersion(buffer);
 	write(sockfd, "1", 1);
-
+	int size = readNum(sockfd);
+	char* tarFile = (char*)malloc(size+1);
+	n = read(sockfd, tarFile, size);
+	int tarfd = open("push.tar.gz", O_RDWR | O_CREAT, 00600);
+	write(tarfd, tarFile, size);
+	char cmd[128];
+	sprintf(cmd, "mv %s %s_%d", buffer, buffer, projNumber);
+	system(cmd);
+	char cmd2[128] = "tar -xzf push.tar.gz";
+	system(cmd2);
+	char cmd3[64] = "rm push.tar.gz";
+	system(cmd3);
+	char manifestPath[256];
+	sprintf(manifestPath, "%s/.Manifest", buffer);	
+	int manfd = open(manifestPath, O_RDONLY);
+	int manversion = readNum(manfd);
+	node* manRoot = readManifest(manfd);
+	char commitPath[256];
+	sprintf(commitPath, "%s/.Commit", buffer);	
+	int commitfd = open(commitPath, O_RDWR | O_CREAT, 00600);
+	write(commitfd, commitFile, x);
+	lseek(commitfd, 0, SEEK_SET);
+	node* commitRoot = readManifest(commitfd);
+	printf("Server Manifest:\n");
+	printManifest(manRoot);
+	printf("Commit File:\n");
+	printManifest(commitRoot);
 	return 0;
 
 }
