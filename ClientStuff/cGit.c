@@ -211,7 +211,7 @@ int commit(int sfd, char* projName){
 	printf("Changes:\n");
 	
 	for(ptr = clientroot; ptr != NULL; ptr = ptr->next) {
-		writeCommit(cfd, ptr, serverroot);
+		writeCommitFromClient(cfd, ptr, serverroot);
 		#ifdef comment //{
 		char status = ptr->status;
 		char commitbuffer[256+MD5_DIGEST_LENGTH];

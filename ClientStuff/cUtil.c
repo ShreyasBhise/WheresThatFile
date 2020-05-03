@@ -128,7 +128,7 @@ void getPath(char* pName, char* fName, char* buffer) {
 	sprintf(buffer, "%s/%s", pName, fName);
 	return;
 }
-int writeCommit(int cfd, node* ptr, node* serverroot) {
+int writeCommitFileClient(int cfd, node* ptr, node* serverroot) {
 	char status = ptr->status;
 	char commitbuffer[256+MD5_DIGEST_LENGTH];
 	node* match;
