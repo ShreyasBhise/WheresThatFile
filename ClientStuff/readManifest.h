@@ -8,7 +8,7 @@ typedef struct node{
 	char* filePath;
 	char* hash;
 } node;
-
+void printManifest(node* root);
 char* readStr(int fd);
 char* readStrP(char* file, int* i);
 int readNum(int fd);
