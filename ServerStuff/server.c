@@ -327,8 +327,8 @@ int push(int sockfd) {
 			n = write(newManfd, toWrite, strlen(toWrite)); 
 		}
 	}
-	
-
+	lseek(newManfd, 0, SEEK_SET);
+	sendFile(sockfd, newManfd);
 	return 0;
 
 }
