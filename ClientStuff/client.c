@@ -64,12 +64,18 @@ int readFileFromServer(int sfd, char** buffer){
 	printf("%d bytes\n", size);
 	return size;
 }
-void getHash(char* toHash, unsigned char* fileHash) {
+char* getHash(char* toHash) {
+	unsigned char fileHash[MD5_DIGEST_LENGTH];
 	MD5_CTX c;
         MD5_Init(&c);
         MD5_Update(&c, toHash, strlen(toHash));
         MD5_Final(fileHash, &c);
-	return;
+	
+	int i;
+	char hash[33];	
+	for( i = 0; i < MD5_DIGEST_LENGTH; i++)
+		sprintf(&hash[i * 2], "%02x", fileHash[i]);	
+	return hash;
 }
 int isFileAdded(node* root, char* filePath) {
 	printf("File path in isFileAdded: %s\n", filePath);
@@ -116,15 +122,9 @@ int addFile(char* projName, char* fileName) {
 	int fileToAdd = open(filePath, O_RDONLY);
 	char* fileContents = readFile(fileToAdd);
 
-	unsigned char fileHash[MD5_DIGEST_LENGTH];
-	getHash(fileContents, fileHash);
+	char* hash = getHash(fileContents);
 
-	int i;
 	char toWrite[256];
-	char hash[33];
-        
-	for(i = 0; i < MD5_DIGEST_LENGTH; i++) 
-		sprintf(&hash[i * 2], "%02x", (unsigned int) fileHash[i]);
 		
 	sprintf(toWrite, "A\t0\t%s\t%s\n", filePath, hash);
 	int n = write(manifest, toWrite, strlen(toWrite)); 
@@ -292,7 +292,9 @@ int commit(int sfd, char* projName){
 					return 1;
 				}
 				// creating ptr->hash 
-				
+				int fileToHash = open(ptr->filePath, O_RDONLY);
+				char* filecontents = readFile(fileToHash);
+				char liveHash = getHash(filecontents); //This is the new hash of the file */
 				if(strcmp(ptr->hash, match->hash)==0) break;
 				else{
 					printf("M %s\n", ptr->filePath);
