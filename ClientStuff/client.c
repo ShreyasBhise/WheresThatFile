@@ -21,6 +21,10 @@ int projectExists(char* projectName){
 	}
 	return 0;
 }
+int fileExists(char* filePath) {
+	return access(filePath, F_OK);	
+	//0 if file exists, -1 if not.
+}
 void readBytes(int sfd, int x, void* buffer){
 	int bytesRead = 0;
 	int n;
@@ -244,6 +248,22 @@ int checkout(int sfd, char* projName){
 }
 
 int commit(int sfd, char* projName){
+	char conflict[256];
+	char update[256];
+	sprintf(conflict, "%s/.Conflict", projName);
+	sprintf(update, "%s/.Upgrade", projName);
+	if(fileExists(conflict) == 0) { 
+		printf("Error: Conflicts exist\n");
+		return 0;
+	}
+	if(fileExists(update) == 0) {
+		struct stat st;
+		stat(update, &st);
+		if(st.st_size != 0) {
+			printf("Error: Client is behind the server, upgrade before you commit");
+			return 0;
+		}
+	}
 	char fileName[256];
 	sprintf(fileName, "%s/.Manifest", projName);
 	int fd = open(fileName, O_RDONLY);
