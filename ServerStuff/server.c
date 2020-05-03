@@ -11,6 +11,13 @@
 #include<fcntl.h>
 #include"../ClientStuff/readManifest.h"
 
+typedef struct commitNode{
+	char* file;
+	struct commitNode* next;
+} commitNode;
+
+commitNode* commitRoot;
+
 void error(char* msg) {
 	printf("ERROR: %s\n", msg);
 	exit(1);
@@ -160,6 +167,14 @@ int commit(int sockfd){
 	int manfd = open(manifestPath, O_RDONLY);
 	sendFile(sockfd, manfd);
 	write(sockfd, "\n\n", 2);
+	int size = readNum(sockfd);
+	char* commitFile = (char*)malloc(size);
+	int n = read(sockfd, commitFile, size);
+	commitNode* newnode = (commitNode*)malloc(sizeof(commitNode));
+	newnode->next = commitRoot;
+	commitRoot = newnode;
+	commitRoot->file=commitFile;
+	write(1, commitRoot->file, size);
 	return 0;
 }
 void* clientConnect(void* clientSockfd) {
@@ -199,6 +214,7 @@ void* clientConnect(void* clientSockfd) {
 //	return (void *) &op;
 }
 int main(int argc, char** argv) {
+	commitRoot = NULL;
 	printf("Starting server\n");
 	int sockfd = -1; //fd for socket
 	int newsockfd = -1; //fd for client socket
