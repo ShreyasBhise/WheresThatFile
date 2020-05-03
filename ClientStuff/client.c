@@ -81,7 +81,15 @@ int isFileAdded(node* root, char* filePath) {
 			return 1;	
 	}
 	return 0;
-
+}
+node* getMatch(char* fileName, node* root){
+	node* ptr;
+	for(ptr = root; ptr!=NULL; ptr=ptr->next){
+		if(strcmp(ptr->filePath, fileName)==0){
+			return ptr;
+		}
+	}
+	return NULL;
 }
 void getPath(char* pName, char* fName, char* buffer) {
 	sprintf(buffer, "%s/%s", pName, fName);
@@ -183,7 +191,6 @@ int createProject(int sfd, char* projName){
 	strcat(filebuffer, "/.Manifest");
 	int fd = open(filebuffer, O_RDWR | O_CREAT, 00600);
 	write(fd, *buffer, size);
-	write(fd, "\n", 1);
 	return 0;
 }
 int currentVersion(int sfd, char* projName) {
@@ -272,15 +279,46 @@ int commit(int sfd, char* projName){
 	sprintf(commitFile, "%s/.Commit", projName);
 	int cfd = open(commitFile, O_RDWR | O_CREAT, 00600);
 	node* ptr;
+	printf("Changes:\n");
 	for(ptr = clientroot; ptr != NULL; ptr = ptr->next) {
 		char status = ptr->status;
+		char commitbuffer[256+MD5_DIGEST_LENGTH];
+		node* match;
+		match = getMatch(ptr->filePath, serverroot);
 		switch(status) {
-			case 'M':
-			case 'A':
-			case 'D':
+			case 'M' : ;// need to recompute hash
+				if(match==NULL){
+					printf("Unable to find file in server .Manifest\n");
+					return 1;
+				}
+				// creating ptr->hash 
+				
+				if(strcmp(ptr->hash, match->hash)==0) break;
+				else{
+					printf("M %s\n", ptr->filePath);
+					sprintf(commitbuffer, "M\t%d\t%s\t%s\n", ptr->version+1, ptr->filePath, ptr->hash);
+					write(cfd, commitbuffer, strlen(commitbuffer));
+				}
+				break;
+			case 'A' :
+				if(match!=NULL){
+					printf("Added file that already exists on server\n");
+					return 1;
+				}
+				printf("A %s\n", ptr->filePath);
+				sprintf(commitbuffer, "A\t%d\t%s\t%s\n", ptr->version+1, ptr->filePath, ptr->hash);
+				write(cfd, commitbuffer, strlen(commitbuffer));
+				break;
+			case 'D' :
+				if(match==NULL){
+					printf("Asking to delete file that does not exist\n");
+					return 1;
+				}
+				printf("M %s\n", ptr->filePath);
+				sprintf(commitbuffer, "M\t%d\t%s\t%s\n", ptr->version+1, ptr->filePath, match->hash);
+				write(cfd, commitbuffer, strlen(commitbuffer));
 				break;
 		}
-		
 	}
 	return 0;
 }
