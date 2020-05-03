@@ -28,7 +28,38 @@ void error(char* msg) {
 	printf("ERROR: %s\n", msg);
 	exit(1);
 }
-
+int isChanged(char* fileName, node* root){
+	node* ptr;
+	for(ptr = root; ptr!=NULL; ptr=ptr->next){
+		if(strcmp(fileName, root->filePath)==0){
+			return 1;
+		}
+	}
+	return 0;
+}
+char* removeProjName(char* filePath){
+	char c;
+	int i = 0;
+	while(i<strlen(filePath)){
+		c = filePath[i];
+		if(c=='/'){
+			char* newName = (char*)malloc(256);
+			strcpy(newName, filePath+i);
+			return newName;
+		}
+		i++;
+	}
+	return NULL;
+}
+void writeCommit(int fd, node* root){
+	node* ptr;
+	for(ptr = root; ptr!=NULL; ptr = ptr->next){
+		char toWrite[256];
+		sprintf(toWrite, "M\t%d\t%s\t%s\n", ptr->version, ptr->filePath, ptr->hash);
+		int n = write(fd, toWrite, strlen(toWrite)); 
+	}
+	return;
+}
 projNode* searchPNode(char* pName) { //Return pointer to the projectNode matching the project name that is given.
 	projNode* ptr;
 	for(ptr = projRoot; ptr != NULL; ptr = ptr->next) {
@@ -255,6 +286,11 @@ int push(int sockfd) {
 	n = read(sockfd, tarFile, size);
 	int tarfd = open("push.tar.gz", O_RDWR | O_CREAT, 00600);
 	write(tarfd, tarFile, size);
+	char manifestPath[256];
+	sprintf(manifestPath, "%s/.Manifest", buffer);	
+	int manfd = open(manifestPath, O_RDONLY);
+	int manversion = readNum(manfd);
+	node* manRoot = readManifest(manfd);
 	char cmd[128];
 	sprintf(cmd, "mv %s %s_%d", buffer, buffer, projNumber);
 	system(cmd);
@@ -262,11 +298,6 @@ int push(int sockfd) {
 	system(cmd2);
 	char cmd3[64] = "rm push.tar.gz";
 	system(cmd3);
-	char manifestPath[256];
-	sprintf(manifestPath, "%s/.Manifest", buffer);	
-	int manfd = open(manifestPath, O_RDONLY);
-	int manversion = readNum(manfd);
-	node* manRoot = readManifest(manfd);
 	char commitPath[256];
 	sprintf(commitPath, "%s/.Commit", buffer);	
 	int commitfd = open(commitPath, O_RDWR | O_CREAT, 00600);
@@ -277,6 +308,27 @@ int push(int sockfd) {
 	printManifest(manRoot);
 	printf("Commit File:\n");
 	printManifest(commitRoot);
+	int newManfd = open(manifestPath, O_RDWR | O_CREAT, 00600);
+	char version[10];
+	sprintf(version, "%d\n", manversion+1);
+	write(newManfd, version, strlen(version));
+	writeCommit(newManfd, commitRoot);
+	node* ptr2;
+	for(ptr2 = manRoot; ptr2!=NULL; ptr2 = ptr2->next){
+		int y = isChanged(ptr2->filePath, commitRoot);
+		if(y==0){ // file is not already in the commit
+			char moveFile[256];
+			char* newPath = removeProjName(ptr2->filePath);
+			sprintf(moveFile, "cp %s_%d%s %s", buffer, manversion, newPath, buffer);
+			printf(moveFile);
+			system(moveFile);
+			char toWrite[256];
+			sprintf(toWrite, "M\t%d\t%s\t%s\n", ptr2->version, ptr2->filePath, ptr2->hash);
+			n = write(newManfd, toWrite, strlen(toWrite)); 
+		}
+	}
+	
+
 	return 0;
 
 }
