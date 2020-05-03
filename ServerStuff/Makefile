@@ -1,6 +1,6 @@
-all: ../ClientStuff/readManifest.o
-	gcc -o WTFServer server.c ../ClientStuff/readManifest.o -pthread
+all: readManifest.o
+	gcc -o WTFServer server.c readManifest.o -pthread
 readManifest.o:
-	gcc -c ../ClientStuff/readManifest.c
+	gcc -I ../ClientStuff/ -c ../ClientStuff/readManifest.c -o readManifest.o
 clean:
-	rm WTFServer ../ClientStuff/readManifest.o
+	rm WTTServer readManifest.o
