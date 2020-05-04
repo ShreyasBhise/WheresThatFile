@@ -119,3 +119,7 @@ void freeNodeList(node* root) {
 	}
 	root = NULL;	
 }
+void saveToBackups(char* projName, int version) {
+	
+
+}

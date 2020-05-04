@@ -177,6 +177,7 @@ int push(int sockfd) {
 	}
 	int projNumber = getVersion(buffer);
 	/*TODO: Save current project in .Backup directory */
+	saveToBackups(buffer, projNumber); 
 	write(sockfd, "1", 1);
 	int size = readNum(sockfd);
 	char* tarFile = (char*)malloc(size+1);
