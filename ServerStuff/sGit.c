@@ -263,8 +263,26 @@ int upgrade(int sockfd) {
 	}
 	write(sockfd, "1", 1);
 	int size = readNum(sockfd);
-	node* updateRoot = readManifest(sockfd);
+	node* updateRoot = readManifest(sockfd); // .Update is now in linked list.
 	printManifest(updateRoot);
+	node* ptr;
+	int elements = 0;
+	for(ptr = updateRoot; ptr != NULL; ptr = ptr->next) {
+		if(ptr->status == 'M' || ptr->status == 'A')
+			elements++;
+	}
+	char* fileNames = (char*) malloc(128 * elements);
+	sprintf(fileNames, "tar -czf update.tar.gz ");
+	for(ptr = commitRoot; ptr != NULL; ptr = ptr->next) {
+		if(ptr->status == 'M' || ptr->status == 'A')
+			sprintf(fileNames, "%s ", ptr->filePath);
+	}
+	printf("%s\n", fileNames);
+	system(fileNames); //Creates tar file update.tar.gz
+	int tarfd = open("update.tar.gz", O_RDONLY);
+	sendfile(sockfd, tarfd);	
+	system("rm update.tar.gz");
+	return 0;
 }
 
 int history(int sockfd) {

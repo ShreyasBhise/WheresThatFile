@@ -378,11 +378,18 @@ int upgrade(int sfd, char* projName){
 		write(sfd, "0 ", 2);
 		return 0;
 	}
+	int size;
 	if(fileExists(update) != 0) {
-		printf("Error: Client does not have .Update file, run update first");
+		printf("Error: Client does not have .Update file, run update first.\n");
 		write(sfd, "0 ", 2);
 		return 0;
-	}
+	} else {
+		struct stat st;
+		stat(update, &st);
+		if(st_size == 0) {
+			printf("Project is up to date!");
+			return 0;
+	} 
 	write(sfd, "10 ", 3);
 	write(sfd, projName, strlen(projName));
 	char c;
@@ -390,6 +397,18 @@ int upgrade(int sfd, char* projName){
 	if(c!='1'){
 		printf("Error: project does not exist on server\n");
 		return 1;
+	}
+	node* updateRoot = readManifest(update);
+	node* ptr;
+	char cmd[256];
+	//For anything in the .Update that should be deleted, delete the file.
+	//TODO: Remove from manifest somehow idk
+	for(ptr = updateRoot; ptr != NULL; ptr = ptr->next) {
+		if(ptr->status == 'D') {
+			sprintf("rm %s", ptr->filePath);
+			system(cmd);
+			bzero(cmd, 256);
+		}
 	}
 	int ufd = open(update, O_RDONLY);
 	sendFile(sfd, ufd);
