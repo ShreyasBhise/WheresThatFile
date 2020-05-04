@@ -233,7 +233,7 @@ int push(int sockfd) {
 			n = write(newManfd, toWrite, strlen(toWrite)); 
 		}
 	}	
-	saveToBackups(buffer, projBackup);
+	close(manfd);
 /*	char cmd4[128];	
 	sprintf(cmd4, "cp -r %s_%d/.Backups %s", buffer, projNumber, buffer);
 	system(cmd4);
@@ -244,6 +244,8 @@ int push(int sockfd) {
 	cleanDirectory(buffer);
 	lseek(newManfd, 0, SEEK_SET);
 	sendFile(sockfd, newManfd);
+	close(newManfd);
+	saveToBackups(buffer, projBackup);
 	return 0;
 }
 int update(int sockfd){
@@ -323,5 +325,20 @@ int rollback(int sockfd) {
 		write(sockfd, "0", 1);
 		return -1;	
 	}
+	//Move backup tar to working directory, delete project, untar project, rename untar to projectname)
+	char sysCall[600];
+	sprintf(sysCall, "mv %s ./%s", backupPath, backupToSearch);
+	printf("%s\n", sysCall);
+	system(sysCall);
+	char removeDir[256];
+	sprintf(removeDir, "rm -r %s", projName);
+	system(removeDir);
+	mkdir(projName, S_IRWXU);
+	char untar[256];
+	
+	sprintf(untar, "tar -xzf %s %s", backupToSearch, projName);
+	printf("%s\n", untar);
+	system(untar);
+
 	return 0;
 }

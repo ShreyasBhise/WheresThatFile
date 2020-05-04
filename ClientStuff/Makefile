@@ -6,9 +6,13 @@ cGit.o:
 	gcc -c cGit.c
 cUtil.o:
 	gcc -c cUtil.c
-debug: readManifestDebug
-	gcc -g -o WTF client.c readManifest.o -lssl -lcrypto
+debug: readManifestDebug cGitDebug cUtilDebug
+	gcc -g -o WTF client.c readManifest.o cGit.o cUtil.o -lssl -lcrypto
 readManifestDebug:
 	gcc -g -c readManifest.c
+cGitDebug:
+	gcc -g -c cGit.c
+cUtilDebug:
+	gcc -g -c cUtil.c
 clean:
 	rm WTF readManifest.o cGit.o cUtil.o

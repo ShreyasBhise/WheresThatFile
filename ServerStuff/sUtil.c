@@ -154,6 +154,10 @@ void saveToBackups(char* projDir, char* backupDir) {
 	system(cmd);
 	char cmd2[128];
 	sprintf(cmd2, "mv %s %s/.Backups/%s", backuptar, projDir, backuptar);
+	printf("Executing:  %s\n", cmd2);
 	system(cmd2);
-	remove(backupDir);
+	char removeDir[256];
+	sprintf(removeDir, "ls -la %s; rm -vrf %s", backupDir, backupDir);
+	printf("Executing: %s\n", removeDir);
+	system(removeDir);
 }
