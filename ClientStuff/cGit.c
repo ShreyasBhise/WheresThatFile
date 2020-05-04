@@ -233,7 +233,7 @@ int commit(int sfd, char* projName){
 					return 1;
 				}
 				printf("M %s\n", ptr->filePath);
-				sprintf(commitbuffer, "M\t%d\t%s\t%s\n", ptr->version+1, ptr->filePath, ptr->hash);
+				sprintf(commitbuffer, "M\t%d\t%s\t%s\n", ptr->version+1, ptr->filePath, liveHash);
 				write(cfd, commitbuffer, strlen(commitbuffer));
 				break;
 			case 'A' :
@@ -353,7 +353,7 @@ int update(int sfd, char* projName) {
 	char updateName[128];
 	char conflictName[128];
 	sprintf(updateName, "%s/.Update", projName);
-	sprintf(conflictName, "%s/.Conflict", conflictName);
+	sprintf(conflictName, "%s/.Conflict", projName);
 	char rmcmd[128];
 	sprintf(rmcmd, "rm %s", conflictName);
 	if(fileExists(conflictName)==0){
@@ -363,7 +363,6 @@ int update(int sfd, char* projName) {
 	int ufd = open(updateName, O_RDWR | O_CREAT, 00600);
 	if(serverProjVersion==projVersion){
 		write(1, "Everything Up to date.\n", strlen("Everything up to date.\n"));
-		system(rmcmd);
 		return 0;
 	}
 	node* ptr;
