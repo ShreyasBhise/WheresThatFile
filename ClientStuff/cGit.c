@@ -27,7 +27,7 @@ int addFile(char* projName, char* fileName) {
 	
 	
 	if(isFileAdded(mList, filePath)) {
-		printf("File is already in manifest\n");
+		printf("Error: File is already in manifest\n");
 		return 0;
 	}
 	int fileToAdd = open(filePath, O_RDONLY);
@@ -73,7 +73,10 @@ int destroyProject(int sfd, char* projName){
 	while((n=read(sfd, &c, 1))==0)
 	
 	if(c == '1') printf("Project has been removed from the repository\n");
-	else printf("Error: Project does not exist in repository\n");
+	else{
+		char errorMsg[128] = "Error: Project dpesm't exist on Server\n";
+		write(1, errorMsg, strlen(errorMsg));
+	}
 	return 0;
 }
 
@@ -87,7 +90,8 @@ int createProject(int sfd, char* projName){
 	while((n=read(sfd, &c, 1))==0){
 	}
 	if(c=='0'){ // project already exists
-		printf("Error: Project already exists\n");
+		char errorMsg[128] = "Error: Project already exists on Server\n";
+		write(1, errorMsg, strlen(errorMsg));
 		return 1;
 	} else if (c!='1'){
 		printf("Error\n");
@@ -109,21 +113,25 @@ int currentVersion(int sfd, char* projName) {
 	char* command = "5 ";
 	n = write(sfd, command, 2);
 	n = write(sfd, projName, strlen(projName));
+	char c;
+	n = read(sfd, &c, 1);
+	if(c!='1'){
+		printf("Error: Project doesn't exist on server\n");
+		return 1;
+	}
 	int num = readNum(sfd);
-	printf("%d", num);
+	printf("Server Version: %d\n", num);
 	int i;
 	for(i = 0; i < num; i++) {
-		printf("loop number: %d\n", i);
 		int version = readNum(sfd);
-		printf("%d\n", version);
 		char* name = readStr(sfd);
-		printf("%s\n", name);
 		printf("%d\t%s\n", version, name);
 	}
+	return 0;
 }
 int checkout(int sfd, char* projName){
 	if(projectExists(projName)){
-		printf("Error: project already exits\n");
+		printf("Error: Project already exists on client\n");
 		write(sfd, "0 ", 2);
 		return 1;
 	}
@@ -223,7 +231,7 @@ int pushCommit(int sfd, char* projName){
 	sprintf(commitName, "%s/.Commit", projName);
 	int fd = open(commitName, O_RDONLY);
 	if(fd==-1){
-		printf("Error: unable to open client .Commit");
+		printf("Error: unable to open client .Commit\n");
 		write(sfd, "0 ", 2);
 		return 1;
 	}
@@ -238,7 +246,7 @@ int pushCommit(int sfd, char* projName){
 	sendFile(sfd, fd);
 	read(sfd, &c, 1);
 	if(c!='1'){
-		printf("Error: .Commit does not exist on server.");
+		printf("Error: Push failed. Please commit again.\n");
 		return 1;
 	}
 	lseek(fd, 0, SEEK_SET);
@@ -328,9 +336,9 @@ int update(int sfd, char* projName) {
 		} else { // entry exists on both client and server
 			int tempfd = open(match->filePath, O_RDONLY);
 			char* fileContents = readFile(tempfd);
-			printf("FILECONTENTS:%s\n", fileContents);
+//			printf("FILECONTENTS:%s\n", fileContents);
 			char* hash = getHash(fileContents);
-			printf("LIVE HASH: %s\n SERVER HASH: %s\n", hash, ptr->hash);
+//			printf("LIVE HASH: %s\n SERVER HASH: %s\n", hash, ptr->hash);
 			if(strcmp(hash, ptr->hash)==0){ // no change with server, does not need updating
 				close(tempfd);
 				continue;
@@ -339,6 +347,7 @@ int update(int sfd, char* projName) {
 				int cfd;
 				if(fileExists(conflictName)!=0){
 					cfd = open(conflictName, O_RDWR | O_CREAT, 00600);
+					printf("Comflicts Exist. They must be resolved before upgrading.\n");
 				} else {
 					cfd = open(conflictName, O_RDWR);
 					lseek(cfd, 0, SEEK_END);
@@ -374,13 +383,14 @@ int upgrade(int sfd, char* projName){
 	sprintf(conflict, "%s/.Conflict", projName);
 	sprintf(update, "%s/.Update", projName);
 	if(fileExists(conflict) == 0) { 
-		printf("Error: Conflicts exist\n");
+		char errorMsg[128] = "Error: Conflicts Exist. They must be resolved before upgrading the project.\n";
+		write(1, errorMsg, strlen(errorMsg));
 		write(sfd, "0 ", 2);
 		return -1;
 	}
 	int size;
 	if(fileExists(update) != 0) {
-		printf("Error: Client does not have .Update file, run update first.\n");
+		printf("Error: Client does not have .Update file, run update before upgrading.\n");
 		write(sfd, "0 ", 2);
 		return -1;
 	} else {
@@ -399,20 +409,37 @@ int upgrade(int sfd, char* projName){
 		printf("Error: project does not exist on server\n");
 		return -1;
 	}
-	node* updateRoot = readManifestServer(update);
+	int ufd = open(update, O_RDONLY);
+	node* updateRoot = readManifest(ufd);
+	printManifest(updateRoot);
 	node* ptr;
 	char cmd[256];
 	//For anything in the .Update that should be deleted, delete the file.
 	//TODO: Remove from manifest somehow idk
 	for(ptr = updateRoot; ptr != NULL; ptr = ptr->next) {
-		if(ptr->status == 'D') {
-			sprintf("rm %s", ptr->filePath);
+		if(ptr->status == 'D' || ptr->status == 'M') {
+			sprintf(cmd, "rm %s", ptr->filePath);
 			system(cmd);
 			bzero(cmd, 256);
 		}
 	}
-	int ufd = open(update, O_RDONLY);
+	char rmMan[128];
+	sprintf(rmMan, "rm %s/.Manifest", projName);
+	system(rmMan);
+	lseek(ufd, 0, SEEK_SET);
 	sendFile(sfd, ufd);
+	write(sfd, "\n\n", 2);
+
+	int tarSize = readNum(sfd);
+	char* tarFile = (char*)malloc(tarSize+1);
+	printf("%d\n", tarSize);
+	read(sfd, tarFile, tarSize);
+	int tarfd = open("upgrade.tar.gz", O_RDWR | O_CREAT, 00600);
+	write(tarfd, tarFile, tarSize);
+	char cmd2[128];
+	sprintf(cmd2, "tar -xzf upgrade.tar.gz %s", projName);
+	system(cmd2);
+	system("rm upgrade.tar.gz");
 	//write(sfd, "\n\n", 2);
 	
 	return 0;

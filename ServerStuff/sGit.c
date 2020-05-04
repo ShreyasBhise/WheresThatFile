@@ -287,15 +287,17 @@ int upgrade(int sockfd) {
 			elements++;
 	}
 	char* fileNames = (char*) malloc(128 * elements);
-	sprintf(fileNames, "tar -czf update.tar.gz ");
+	sprintf(fileNames, "tar -czf update.tar.gz %s/.Manifest ", pName);
+	printf("%s\n", fileNames);
 	for(ptr = updateRoot; ptr != NULL; ptr = ptr->next) {
 		if(ptr->status == 'M' || ptr->status == 'A')
-			sprintf(fileNames, "%s ", ptr->filePath);
+			strcat(fileNames, ptr->filePath);
+			strcat(fileNames, " ");
 	}
 	printf("%s\n", fileNames);
 	system(fileNames); //Creates tar file update.tar.gz
 	int tarfd = open("update.tar.gz", O_RDONLY);
-	sendfile(sockfd, tarfd);	
+	sendFile(sockfd, tarfd);	
 	close(tarfd);
 	remove("update.tar.gz");
 	return 0;
