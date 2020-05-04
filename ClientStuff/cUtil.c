@@ -149,7 +149,7 @@ int writeCommitFileClient(int cfd, node* ptr, node* serverroot) {
 				return 1;
 			}
 			printf("M %s\n", ptr->filePath);
-			sprintf(commitbuffer, "M\t%d\t%s\t%s\n", ptr->version+1, ptr->filePath, ptr->hash);
+			sprintf(commitbuffer, "M\t%d\t%s\t%s\n", ptr->version+1, ptr->filePath, liveHash);
 			write(cfd, commitbuffer, strlen(commitbuffer));
 			break;
 		case 'A' :
