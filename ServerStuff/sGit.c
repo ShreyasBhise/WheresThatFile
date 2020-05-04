@@ -11,6 +11,7 @@
 #include<fcntl.h>
 #include"readManifest.h"
 #include"server.h"
+#define print_message(msg, arg) printf("%s %s=%s\n", msg, #arg, arg)
 
 int destroyProject(int sockfd) { /*Send 1 if the project exists, and will be deleted. 0 if the project doesn't exist */
 	char* buffer = getProjName(sockfd);
@@ -124,6 +125,7 @@ int commit(int sockfd){
 	sprintf(manifestPath, "%s/.Manifest", buffer);	
 	int manfd = open(manifestPath, O_RDONLY);
 	sendFile(sockfd, manfd);
+	close(manfd);
 	write(sockfd, "\n\n", 2);
 	int size = readNum(sockfd);
 	char* commitFile = (char*)malloc(size+1);
@@ -144,7 +146,7 @@ int commit(int sockfd){
 }
 int push(int sockfd) {
 	char* buffer = getProjName(sockfd);
-	printf("%s\n", buffer);
+	print_message("Project name", buffer);
 	if(!projectExists(buffer)){
 //		printf("Project does not exist on server.\n");
 		write(sockfd, "0", 1);
@@ -179,18 +181,21 @@ int push(int sockfd) {
 		return 1;
 	}
 	int projNumber = getVersion(buffer);
-	/*TODO: Save current project in .Backup directory */
+
 	write(sockfd, "1", 1);
 	int size = readNum(sockfd);
 	char* tarFile = (char*)malloc(size+1);
 	n = read(sockfd, tarFile, size);
 	int tarfd = open("push.tar.gz", O_RDWR | O_CREAT, 00600);
 	write(tarfd, tarFile, size);
+	close(tarfd);
 	char manifestPath[256];
 	sprintf(manifestPath, "%s/.Manifest", buffer);	
+	print_message("manifest path: ", manifestPath);
 	int manfd = open(manifestPath, O_RDONLY);
 	int manversion = readNum(manfd);
 	node* manRoot = readManifest(manfd);
+	close(manfd);
 	char cmd[128];
 	char projBackup[128];
 	sprintf(projBackup, "%s_%d", buffer, projNumber);
@@ -199,7 +204,6 @@ int push(int sockfd) {
 	
 	char cmd2[128] = "tar -xzf push.tar.gz";
 	system(cmd2);
-	close(tarfd);
 	remove("push.tar.gz");
 //	char cmd3[64] = "rm push.tar.gz";
 //	system(cmd3);
@@ -233,7 +237,7 @@ int push(int sockfd) {
 			n = write(newManfd, toWrite, strlen(toWrite)); 
 		}
 	}	
-	close(manfd);
+
 /*	char cmd4[128];	
 	sprintf(cmd4, "cp -r %s_%d/.Backups %s", buffer, projNumber, buffer);
 	system(cmd4);
