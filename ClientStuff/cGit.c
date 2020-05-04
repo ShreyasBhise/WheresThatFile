@@ -161,7 +161,7 @@ int commit(int sfd, char* projName){
 	sprintf(update, "%s/.Upgrade", projName);
 	if(fileExists(conflict) == 0) { 
 		printf("Error: Conflicts exist\n");
-		write(sfd, "0", 2);
+		write(sfd, "0 ", 2);
 		return 0;
 	}
 	if(fileExists(update) == 0) {
@@ -367,4 +367,31 @@ int update(int sfd, char* projName) {
 
 
 	return 0;
+}
+int upgrade(int sfd, char* projName){
+	char conflict[256];
+	char update[256];
+	sprintf(conflict, "%s/.Conflict", projName);
+	sprintf(update, "%s/.Update", projName);
+	if(fileExists(conflict) == 0) { 
+		printf("Error: Conflicts exist\n");
+		write(sfd, "0 ", 2);
+		return 0;
+	}
+	if(fileExists(update) != 0) {
+		printf("Error: Client does not have .Update file, run update first");
+		write(sfd, "0 ", 2);
+		return 0;
+	}
+	write(sfd, "10 ", 3);
+	write(sfd, projName, strlen(projName));
+	char c;
+	read(sfd, &c, 1);
+	if(c!='1'){
+		printf("Error: project does not exist on server\n");
+		return 1;
+	}
+	int ufd = open(update, O_RDONLY);
+	sendFile(sfd, ufd);
+	//write(sfd, "\n\n", 2);
 }

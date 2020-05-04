@@ -117,6 +117,9 @@ int checkinput(int argc, char** argv){
 		else if (strcmp(argv[1], "update") == 0 && argc == 3) {
 			return 9;
 		}
+		else if (strcmp(argv[1], "upgrade") == 0 && argc == 3) {
+			return 10;
+		}
 	}
 	return -1;
 }
@@ -160,6 +163,9 @@ int main(int argc, char** argv){
 			break;
 		case 9: //update
 			n = update(sfd, argv[2]);
+			break;
+		case 10: //upgrade
+			n = upgrade(sfd, argv[2]);
 			break;
 	}
 //	printf("%s\t%d\n", ipaddress, port);

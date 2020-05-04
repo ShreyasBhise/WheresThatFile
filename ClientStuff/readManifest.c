@@ -125,13 +125,13 @@ node* readManifest(int fd){
 		if(c[0]=='\n') break;
 		c[2] = '\0';
 		curr->status = c[0];
-		printf("Read status: %c.\n", curr->status);
+//		printf("Read status: %c.\n", curr->status);
 		curr->version = readNum(fd);
-		printf("Read version: %d.\n", curr->version);
+//		printf("Read version: %d.\n", curr->version);
 		curr->filePath = readStr(fd);
-		printf("Read filePath: %s.\n", curr->filePath);
+//		printf("Read filePath: %s.\n", curr->filePath);
 		curr->hash = readStr(fd);
-		printf("Read hash: %s.\n", curr->hash);
+//		printf("Read hash: %s.\n", curr->hash);
 		if(prev!=NULL){
 			prev->next = curr;
 		}
