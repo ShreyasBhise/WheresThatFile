@@ -211,7 +211,7 @@ int commit(int sfd, char* projName){
 	printf("Changes:\n");
 	
 	for(ptr = clientroot; ptr != NULL; ptr = ptr->next) {
-		writeCommitFromClient(cfd, ptr, serverroot);
+		writeCommitFileClient(cfd, ptr, serverroot);
 		#ifdef comment //{
 		char status = ptr->status;
 		char commitbuffer[256+MD5_DIGEST_LENGTH];
@@ -319,7 +319,7 @@ int pushCommit(int sfd, char* projName){
 	system(cmd2);
 	int size = readNum(sfd);
 	char* newMan = (char*)malloc(size);
-	char* manPath[128];
+	char* manPath = (char*)malloc(128);
 	sprintf(manPath, "%s/.Manifest", projName);
 	int manfd = open(manPath, O_RDWR | O_CREAT, 00600);
 	readBytes(sfd, size, newMan);

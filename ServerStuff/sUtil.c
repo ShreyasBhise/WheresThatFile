@@ -19,7 +19,7 @@ void error(char* msg) {
 int isChanged(char* fileName, node* root){
 	node* ptr;
 	for(ptr = root; ptr!=NULL; ptr=ptr->next){
-		if(strcmp(fileName, root->filePath)==0){
+		if(strcmp(fileName, ptr->filePath)==0){
 			return 1;
 		}
 	}
@@ -42,6 +42,7 @@ char* removeProjName(char* filePath){
 void writeCommit(int fd, node* root){
 	node* ptr;
 	for(ptr = root; ptr!=NULL; ptr = ptr->next){
+		if(ptr->status=='D') continue;
 		char toWrite[256];
 		sprintf(toWrite, "M\t%d\t%s\t%s\n", ptr->version, ptr->filePath, ptr->hash);
 		int n = write(fd, toWrite, strlen(toWrite)); 
