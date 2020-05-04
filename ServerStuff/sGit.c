@@ -262,6 +262,7 @@ int upgrade(int sockfd) {
 		return 1;
 	}
 	write(sockfd, "1", 1);
+	int size = readNum(sockfd);
 	node* updateRoot = readManifest(sockfd);
 	printManifest(updateRoot);
 }
