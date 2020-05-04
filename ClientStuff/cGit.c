@@ -212,54 +212,6 @@ int commit(int sfd, char* projName){
 	
 	for(ptr = clientroot; ptr != NULL; ptr = ptr->next) {
 		writeCommitFileClient(cfd, ptr, serverroot);
-		#ifdef comment //{
-		char status = ptr->status;
-		char commitbuffer[256+MD5_DIGEST_LENGTH];
-		node* match;
-		match = getMatch(ptr->filePath, serverroot);
-		switch(status) {
-			case 'M' : ;// need to recompute hash
-				if(match==NULL){
-					printf("Unable to find file in server .Manifest\n");
-					return 1;
-				}
-				// creating ptr->hash 
-				int fileToHash = open(ptr->filePath, O_RDONLY);
-				char* filecontents = readFile(fileToHash);
-				char* liveHash = getHash(filecontents); //This is the new hash of the file */
-				if(strcmp(liveHash, match->hash)==0) break;
-				if(match->version>ptr->version){
-					printf("File version doesn't match for %s.\n", ptr->filePath);
-					return 1;
-				}
-				printf("M %s\n", ptr->filePath);
-				sprintf(commitbuffer, "M\t%d\t%s\t%s\n", ptr->version+1, ptr->filePath, liveHash);
-				write(cfd, commitbuffer, strlen(commitbuffer));
-				break;
-			case 'A' :
-				if(match!=NULL){
-					printf("Added file that already exists on server\n");
-					return 1;
-				}
-				printf("A %s\n", ptr->filePath);
-				sprintf(commitbuffer, "A\t%d\t%s\t%s\n", ptr->version+1, ptr->filePath, ptr->hash);
-				write(cfd, commitbuffer, strlen(commitbuffer));
-				break;
-			case 'D' :
-				if(match==NULL){
-					printf("Asking to delete file that does not exist\n");
-					return 1;
-				}
-				if(match->version>ptr->version){
-					printf("File version doesn't match for %s.\n", ptr->filePath);
-					return 1;
-				}
-				printf("D %s\n", ptr->filePath);
-				sprintf(commitbuffer, "D\t%d\t%s\t%s\n", ptr->version+1, ptr->filePath, match->hash);
-				write(cfd, commitbuffer, strlen(commitbuffer));
-				break;
-		}
-		#endif //comment }
 	}
 	lseek(cfd, 0, SEEK_SET);
 	system("cat p3/.Commit");
@@ -376,7 +328,9 @@ int update(int sfd, char* projName) {
 		} else { // entry exists on both client and server
 			int tempfd = open(match->filePath, O_RDONLY);
 			char* fileContents = readFile(tempfd);
+			printf("FILECONTENTS:%s\n", fileContents);
 			char* hash = getHash(fileContents);
+			printf("LIVE HASH: %s\n SERVER HASH: %s\n", hash, ptr->hash);
 			if(strcmp(hash, ptr->hash)==0){ // no change with server, does not need updating
 				close(tempfd);
 				continue;
@@ -409,9 +363,6 @@ int update(int sfd, char* projName) {
 			write(ufd, updatebuffer, strlen(updatebuffer));
 		}
 	}
-
-
-
 
 
 
