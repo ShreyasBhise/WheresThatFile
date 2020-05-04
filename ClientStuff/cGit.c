@@ -386,9 +386,10 @@ int upgrade(int sfd, char* projName){
 	} else {
 		struct stat st;
 		stat(update, &st);
-		if(st_size == 0) {
+		if(st.st_size == 0) {
 			printf("Project is up to date!");
 			return 0;
+		}
 	} 
 	write(sfd, "10 ", 3);
 	write(sfd, projName, strlen(projName));
@@ -398,7 +399,7 @@ int upgrade(int sfd, char* projName){
 		printf("Error: project does not exist on server\n");
 		return 1;
 	}
-	node* updateRoot = readManifest(update);
+	node* updateRoot = readManifestServer(update);
 	node* ptr;
 	char cmd[256];
 	//For anything in the .Update that should be deleted, delete the file.

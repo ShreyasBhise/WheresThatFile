@@ -180,7 +180,6 @@ int push(int sockfd) {
 	}
 	int projNumber = getVersion(buffer);
 	/*TODO: Save current project in .Backup directory */
-	//saveToBackups(buffer, projNumber); 
 	write(sockfd, "1", 1);
 	int size = readNum(sockfd);
 	char* tarFile = (char*)malloc(size+1);
@@ -193,18 +192,24 @@ int push(int sockfd) {
 	int manversion = readNum(manfd);
 	node* manRoot = readManifest(manfd);
 	char cmd[128];
-	sprintf(cmd, "mv %s %s_%d", buffer, buffer, projNumber);
+	char projBackup[128];
+	sprintf(projBackup, "%s_%d", buffer, projNumber);
+	sprintf(cmd, "mv %s %s", buffer, projBackup);
 	system(cmd);
+	
 	char cmd2[128] = "tar -xzf push.tar.gz";
 	system(cmd2);
-	char cmd3[64] = "rm push.tar.gz";
-	system(cmd3);
+	close(tarfd);
+	remove("push.tar.gz");
+//	char cmd3[64] = "rm push.tar.gz";
+//	system(cmd3);
 	char commitPath[256];
 	sprintf(commitPath, "%s/.Commit", buffer);	
 	int commitfd = open(commitPath, O_RDWR | O_CREAT, 00600);
 	write(commitfd, commitFile, x);
 	lseek(commitfd, 0, SEEK_SET);
 	node* commitRoot = readManifest(commitfd);
+	close(commitfd);
 //	printf("Server Manifest:\n");
 //	printManifest(manRoot);
 //	printf("Commit File:\n");
@@ -217,7 +222,7 @@ int push(int sockfd) {
 	node* ptr2;
 	for(ptr2 = manRoot; ptr2!=NULL; ptr2 = ptr2->next){
 		int y = isChanged(ptr2->filePath, commitRoot);
-		if(y==0){ // file is not already in the commit
+		if(y==0) { // file is not already in the commit
 			char moveFile[256];
 			char* newPath = removeProjName(ptr2->filePath);
 			sprintf(moveFile, "cp %s_%d%s %s", buffer, manversion, newPath, buffer);
@@ -227,8 +232,16 @@ int push(int sockfd) {
 			sprintf(toWrite, "M\t%d\t%s\t%s\n", ptr2->version, ptr2->filePath, ptr2->hash);
 			n = write(newManfd, toWrite, strlen(toWrite)); 
 		}
-	}
+	}	
+	saveToBackups(buffer, projBackup);
+/*	char cmd4[128];	
+	sprintf(cmd4, "cp -r %s_%d/.Backups %s", buffer, projNumber, buffer);
+	system(cmd4);
+	char cmd5[128];
+	sprintf(cmd5, "mv %s_%d %s/.Backups/%s_%d", buffer, projNumber, buffer, buffer, projNumber);
+	system(cmd5); */
 	freeNodeList(commitRoot);
+	cleanDirectory(buffer);
 	lseek(newManfd, 0, SEEK_SET);
 	sendFile(sockfd, newManfd);
 	return 0;
@@ -273,7 +286,7 @@ int upgrade(int sockfd) {
 	}
 	char* fileNames = (char*) malloc(128 * elements);
 	sprintf(fileNames, "tar -czf update.tar.gz ");
-	for(ptr = commitRoot; ptr != NULL; ptr = ptr->next) {
+	for(ptr = updateRoot; ptr != NULL; ptr = ptr->next) {
 		if(ptr->status == 'M' || ptr->status == 'A')
 			sprintf(fileNames, "%s ", ptr->filePath);
 	}
@@ -281,7 +294,8 @@ int upgrade(int sockfd) {
 	system(fileNames); //Creates tar file update.tar.gz
 	int tarfd = open("update.tar.gz", O_RDONLY);
 	sendfile(sockfd, tarfd);	
-	system("rm update.tar.gz");
+	close(tarfd);
+	remove("update.tar.gz");
 	return 0;
 }
 

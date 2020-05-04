@@ -119,7 +119,41 @@ void freeNodeList(node* root) {
 	}
 	root = NULL;	
 }
-void saveToBackups(char* projName, int version) {
-	
+int fileExists(char* filePath) {
+	return access(filePath, F_OK);	
+	//0 if file exists, -1 if not.
+}
+void cleanDirectory(char* projName) {
+	char commit[256];
+	sprintf(commit, "%s/.Commit", projName);
+	char conflict[256];
+	sprintf(conflict, "%s/.Conflict", projName);
+	char update[256];
+	sprintf(update, "%s/.Update", projName);
+	if(0 == fileExists(commit)) 
+		remove(commit);
+	if( 0 == fileExists(conflict)) {
+		remove(conflict);
+	}
 
+	if (0 == fileExists(update)) {
+		remove(update);
+	}
+}
+void saveToBackups(char* projDir, char* backupDir) {
+	//Tar backupDir, move tar to projDir/.Backups, delete backupDir
+	char sysCall[256];
+	char backuptar[50];
+	sprintf(backuptar, "%s.tar.gz", backupDir);
+	sprintf(sysCall, "tar -czf %s ./%s", backuptar, backupDir);
+	printf("tar file name: %s\n", backuptar);
+	system(sysCall);
+	char cmd[128];	
+	sprintf(cmd, "cp -r %s/.Backups %s", backupDir, projDir);
+	printf("Executing: %s\n", cmd);
+	system(cmd);
+	char cmd2[128];
+	sprintf(cmd2, "mv %s %s/.Backups/%s", backuptar, projDir, backuptar);
+	system(cmd2);
+	remove(backupDir);
 }

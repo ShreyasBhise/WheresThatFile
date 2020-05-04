@@ -23,8 +23,11 @@ char *getSize (int fd);
 void sendFile (int sockfd, int fd);
 int projectExists (char *projectName);
 void freeNodeList(node* ptr);
-
 char *getProjName (int sockfd);
+int fileExists(char* filePath);
+void cleanDirectory(char* projName);
+void saveToBackups(char* projDir, char* backupDir);
+
 int destroyProject (int sockfd);
 int createProject (int sockfd);
 char *extractFileNameFromPath (char *path);
