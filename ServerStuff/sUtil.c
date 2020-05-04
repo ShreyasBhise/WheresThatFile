@@ -109,3 +109,13 @@ int getVersion(char* projName){
 	close(manfd);
 	return x;
 }
+void freeNodeList(node* root) {
+	node* curr = root;
+	node* next;
+	while(curr != NULL) {
+		next = curr->next;
+		free(curr);
+		curr = next;
+	}
+	root = NULL;	
+}

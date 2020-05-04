@@ -35,6 +35,10 @@ int createProject(int sockfd) { /* Send 1 if the project does not exist, and a m
 		write(sockfd, "1", 1);
 		mkdir(buffer, 0700);
 		
+		char backupDir[350];
+		sprintf(backupDir, "mkdir %s/.Backups", buffer);
+	//	printf("%s\n", backupDir);
+		system(backupDir); 
 		strcat(buffer, "/.Manifest");
 		int fd = open(buffer, O_RDWR | O_CREAT, 00600);
 		write(fd, "0\n", 2);
@@ -85,7 +89,7 @@ int checkout(int sockfd) {
 		char sysCall[256];
 		char tarName[25];
 		sprintf(tarName, "%s.tar.gz", pName);
-		sprintf(sysCall, "tar -czf %s ./%s", tarName, pName);
+		sprintf(sysCall, "tar -czf %s --exclude='.Backups/*' ./%s", tarName, pName);
 		printf("tar file name: %s\n", tarName);
 		system(sysCall);
 		
@@ -172,6 +176,7 @@ int push(int sockfd) {
 		return 1;
 	}
 	int projNumber = getVersion(buffer);
+	/*TODO: Save current project in .Backup directory */
 	write(sockfd, "1", 1);
 	int size = readNum(sockfd);
 	char* tarFile = (char*)malloc(size+1);
@@ -219,6 +224,7 @@ int push(int sockfd) {
 			n = write(newManfd, toWrite, strlen(toWrite)); 
 		}
 	}
+	freeNodeList(commitRoot);
 	lseek(newManfd, 0, SEEK_SET);
 	sendFile(sockfd, newManfd);
 	return 0;

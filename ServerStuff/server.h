@@ -22,6 +22,7 @@ projNode *searchPNode (char *pName);
 char *getSize (int fd);
 void sendFile (int sockfd, int fd);
 int projectExists (char *projectName);
+void freeNodeList(node* ptr);
 
 char *getProjName (int sockfd);
 int destroyProject (int sockfd);
