@@ -1,3 +1,6 @@
 *.o
 ClientStuff/WTF
 ServerStuff/WTFServer
+ClientStuff/p*/
+ServerStuff/p*/
+ServerStuff/.nfs*
