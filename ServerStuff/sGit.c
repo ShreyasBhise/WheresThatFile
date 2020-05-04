@@ -15,7 +15,7 @@
 int destroyProject(int sockfd) { /*Send 1 if the project exists, and will be deleted. 0 if the project doesn't exist */
 	char* buffer = getProjName(sockfd);
 	if(!projectExists(buffer)) {
-		printf("Project [%s] does not exist.\n", buffer);
+//		printf("Project [%s] does not exist.\n", buffer);
 		write(sockfd, "0", 1);
 		return 0;	
 	}
@@ -37,7 +37,7 @@ int createProject(int sockfd) { /* Send 1 if the project does not exist, and a m
 		
 		char backupDir[350];
 		sprintf(backupDir, "mkdir %s/.Backups", buffer);
-	//	printf("%s\n", backupDir);
+//		printf("%s\n", backupDir);
 		system(backupDir); 
 		strcat(buffer, "/.Manifest");
 		int fd = open(buffer, O_RDWR | O_CREAT, 00600);
@@ -45,7 +45,7 @@ int createProject(int sockfd) { /* Send 1 if the project does not exist, and a m
 		sendFile(sockfd, fd);
 		return 0;
 	}
-	printf("Project already exists.\n");
+//	printf("Project already exists.\n");
 	write(sockfd, "0", 1);
 	return 1;
 }
@@ -60,7 +60,7 @@ int currentVersion(int sockfd) {
 		node* root = readManifest(manfd);
 		char numElements[10];
 		sprintf(numElements, "%d\n", manifestSize);
-		printf("num elements on server: %s\n", numElements);
+//		printf("num elements on server: %s\n", numElements);
 		write(sockfd, numElements, strlen(numElements));
 		node* ptr;
 		for(ptr = root; ptr!= NULL; ptr = ptr->next) {
@@ -76,7 +76,7 @@ int currentVersion(int sockfd) {
 		}
 		return 0;
 	}
-	printf("Project does not exist on server.\n");	
+//	printf("Project does not exist on server.\n");	
 	write(sockfd, "0", 1);
 	return 1;
 
@@ -90,7 +90,7 @@ int checkout(int sockfd) {
 		char tarName[25];
 		sprintf(tarName, "%s.tar.gz", pName);
 		sprintf(sysCall, "tar -czf %s --exclude='.Backups/*' ./%s", tarName, pName);
-		printf("tar file name: %s\n", tarName);
+//		printf("tar file name: %s\n", tarName);
 		system(sysCall);
 		
 		int toSend = open(tarName, O_RDONLY);
@@ -106,9 +106,9 @@ int checkout(int sockfd) {
 }
 int commit(int sockfd){
 	char* buffer = getProjName(sockfd);
-	printf("%s\n", buffer);
+//	printf("%s\n", buffer);
 	if(!projectExists(buffer)){
-		printf("Project does not exist on server.\n");
+//		printf("Project does not exist on server.\n");
 		write(sockfd, "0", 1);
 		return 1;
 	}
@@ -118,7 +118,7 @@ int commit(int sockfd){
 		projCommitted->projName = buffer;
 		projCommitted->commitListRoot = NULL;
 	}
-	printf("test\n");
+//	printf("test\n");
 	write(sockfd, "1", 1);
 	char manifestPath[256];
 	sprintf(manifestPath, "%s/.Manifest", buffer);	
@@ -130,20 +130,23 @@ int commit(int sockfd){
 	int n = read(sockfd, commitFile, size);
 	commitFile[size]='\0';
 	commitNode* newnode = (commitNode*) malloc(sizeof(commitNode));
+
 	newnode->next = projCommitted->commitListRoot;
 	projCommitted->commitListRoot = newnode;
 	newnode->file = commitFile;
 	newnode->size = size;
+
 	write(1, projCommitted->commitListRoot->file, size);
 	projCommitted->next = projRoot;
 	projRoot = projCommitted;
+
 	return 0;
 }
 int push(int sockfd) {
 	char* buffer = getProjName(sockfd);
 	printf("%s\n", buffer);
 	if(!projectExists(buffer)){
-		printf("Project does not exist on server.\n");
+//		printf("Project does not exist on server.\n");
 		write(sockfd, "0", 1);
 		return 1;
 	}
@@ -160,8 +163,8 @@ int push(int sockfd) {
 	commitFile[x]='\0';
 	commitNode* ptr = projCommitted->commitListRoot;
 	while(ptr!=NULL){
-		printf("%d, %d\n", ptr->size, x);
-		printf("%d\n", memcmp(ptr->file, commitFile, x));
+//		printf("%d, %d\n", ptr->size, x);
+//		printf("%d\n", memcmp(ptr->file, commitFile, x));
 		if(ptr->size==x){
 			if(memcmp(ptr->file, commitFile, x)==0){
 				printf("break successful\n");
@@ -202,10 +205,10 @@ int push(int sockfd) {
 	write(commitfd, commitFile, x);
 	lseek(commitfd, 0, SEEK_SET);
 	node* commitRoot = readManifest(commitfd);
-	printf("Server Manifest:\n");
-	printManifest(manRoot);
-	printf("Commit File:\n");
-	printManifest(commitRoot);
+//	printf("Server Manifest:\n");
+//	printManifest(manRoot);
+//	printf("Commit File:\n");
+//	printManifest(commitRoot);
 	int newManfd = open(manifestPath, O_RDWR | O_CREAT, 00600);
 	char version[10];
 	sprintf(version, "%d\n", manversion+1);
@@ -218,7 +221,7 @@ int push(int sockfd) {
 			char moveFile[256];
 			char* newPath = removeProjName(ptr2->filePath);
 			sprintf(moveFile, "cp %s_%d%s %s", buffer, manversion, newPath, buffer);
-			printf(moveFile);
+//			printf(moveFile);
 			system(moveFile);
 			char toWrite[256];
 			sprintf(toWrite, "M\t%d\t%s\t%s\n", ptr2->version, ptr2->filePath, ptr2->hash);
@@ -250,4 +253,25 @@ int update(int sockfd){
 	sendFile(sockfd, manfd);
 	write(sockfd, "\n\n", 2);
 	return 1;
+}
+int upgrade(int sockfd) {
+	char* pName = getProjName(sockfd);
+	printf("Project name (upgrade): %s\n", pName);
+	if(!projectExists(pName)) {
+		write(sockfd, "0", 1);
+		return 1;
+	}
+	write(sockfd, "1", 1);
+	node* updateRoot = readManifest(sockfd);
+	printManifest(updateRoot);
+}
+
+int history(int sockfd) {
+
+	return 0;
+}
+
+int rollback(int sockfd) {
+
+	return 0;
 }

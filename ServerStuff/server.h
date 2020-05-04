@@ -33,6 +33,10 @@ int getVersion (char *projName);
 int checkout (int sockfd);
 int commit (int sockfd);
 int push (int sockfd);
+int update(int sockfd);
+int upgrade(int sockfd);
+int history(int sockfd);
+int rollback(int sockfd);
 
 void *clientConnect (void *clientSockfd);
 int main (int argc, char **argv);

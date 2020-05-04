@@ -14,17 +14,8 @@
 
 void* clientConnect(void* clientSockfd) {
 	int sockfd = *((int *) clientSockfd);
-	char* operation = malloc(6 * sizeof(char));
-	char c;
-//	bzero(*operation, 6);
-	int n; 
-	int curr = 0;
-	while (n = read(sockfd, &c, 1) >= 0) {
-		if(c == ' ') { break; }
-		operation[curr++] = c;
-	}
-	operation[curr] = '\0';
-	int op = atoi(operation);
+	int n;
+	int op = readNum(sockfd);
 	switch(op) {
 		case 0:
 			break;
@@ -48,6 +39,16 @@ void* clientConnect(void* clientSockfd) {
 		case 9:
 			n = update(sockfd);
 			break;
+		case 10:
+			n = upgrade(sockfd);
+			break;
+		case 11:
+			n = history(sockfd);
+			break;
+		case 12:
+			n = rollback(sockfd); 
+			break;
+
 		default:
 			error("Invalid operation");
 			break;

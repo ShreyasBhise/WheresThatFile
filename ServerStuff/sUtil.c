@@ -52,7 +52,7 @@ void writeCommit(int fd, node* root){
 projNode* searchPNode(char* pName) { //Return pointer to the projectNode matching the project name that is given.
 	projNode* ptr;
 	for(ptr = projRoot; ptr != NULL; ptr = ptr->next) {
-		printf("pNode: %s\n", ptr->projName);
+		//printf("pNode: %s\n", ptr->projName);
 		if(strcmp(pName, ptr->projName) == 0) {
 			return ptr;
 		}
@@ -71,14 +71,14 @@ void sendFile(int sockfd, int fd) { // sends the size of the file, a space, then
 	char* sizeStr = getSize(fd);
 	int size = atoi(sizeStr);
 	write(sockfd, strcat(sizeStr, "\t"), strlen(sizeStr) + 1);
-	printf("Sent back to client [%s ]\n", sizeStr);
+//	//printf("Sent back to client [%s ]\n", sizeStr);
 	char* buffer = malloc(size * sizeof(char) + 1);
 	n = read(fd, buffer, size);
 	if (n <= 0) { error("could not read file.\n"); }
 
 	
 	n = write(sockfd, buffer, size);
-	printf("Sent back to client %d bytes [%s ]\n",size, buffer);
+//	printf("Sent back to client %d bytes [%s ]\n",size, buffer);
 
 }
 int projectExists(char* projectName) {
