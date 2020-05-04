@@ -305,6 +305,23 @@ int history(int sockfd) {
 }
 
 int rollback(int sockfd) {
-
+	char* projName = readStr(sockfd);
+	printf("rollback readStr %s\n", projName);
+	char* version = readStr(sockfd);
+	printf("rollback readStr %s\n", version);
+	printf("Read project %s and version %s\n", projName, version);
+	if(!projectExists(projName)) {
+		write(sockfd, "0", 1);
+		return -1;
+	}
+	write(sockfd, "1", 1);
+	char backupToSearch[100];
+	sprintf(backupToSearch, "%s_%s.tar.gz", projName, version);
+	char backupPath[400];
+	sprintf(backupPath, "%s/.Backups/%s", projName, backupToSearch);
+	if(fileExists(backupPath) == -1) {
+		write(sockfd, "0", 1);
+		return -1;	
+	}
 	return 0;
 }

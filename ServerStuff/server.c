@@ -16,6 +16,7 @@ void* clientConnect(void* clientSockfd) {
 	int sockfd = *((int *) clientSockfd);
 	int n;
 	int op = readNum(sockfd);
+	printf("%d\n", op);
 	switch(op) {
 		case 0:
 			break;

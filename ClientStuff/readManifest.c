@@ -48,6 +48,7 @@ char* readStr(int fd){
 		}
 		if(c=='\t' || c=='\n' || c==' '){
 			str[i]='\0';
+			printf("%s\n", str);
 			return str;
 		}
 		if(i+1>=length){ // double length of char array

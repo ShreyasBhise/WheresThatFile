@@ -376,13 +376,13 @@ int upgrade(int sfd, char* projName){
 	if(fileExists(conflict) == 0) { 
 		printf("Error: Conflicts exist\n");
 		write(sfd, "0 ", 2);
-		return 0;
+		return -1;
 	}
 	int size;
 	if(fileExists(update) != 0) {
 		printf("Error: Client does not have .Update file, run update first.\n");
 		write(sfd, "0 ", 2);
-		return 0;
+		return -1;
 	} else {
 		struct stat st;
 		stat(update, &st);
@@ -397,7 +397,7 @@ int upgrade(int sfd, char* projName){
 	read(sfd, &c, 1);
 	if(c!='1'){
 		printf("Error: project does not exist on server\n");
-		return 1;
+		return -1;
 	}
 	node* updateRoot = readManifestServer(update);
 	node* ptr;
@@ -414,4 +414,32 @@ int upgrade(int sfd, char* projName){
 	int ufd = open(update, O_RDONLY);
 	sendFile(sfd, ufd);
 	//write(sfd, "\n\n", 2);
+	
+	return 0;
+}
+int history(int sfd, char* projName) { 
+	//TODO: history function.
+	return 0;
+} 
+
+int rollback(int sfd, char* projName, char* version) {
+	write(sfd, "12 ", 3);
+	char* arguments = (char*)malloc(strlen(projName) + strlen(version) + 15);
+	sprintf(arguments, "%s\t%s\n", projName, version);
+	write(sfd, arguments, strlen(arguments));
+	printf("%s", arguments);
+	char c;
+	read(sfd, &c, 1);
+	if('0' == c) {
+		printf("Error: Project does not exist on server.\n");
+		return -1;
+	}
+	
+	read(sfd, &c, 1);
+	if('0' == c) {
+		printf("Error: Specified version does not exist on server.\n");
+		return -1;
+	}
+	printf("Project %s has been rolled back to version %s.\n", projName, version);
+	return 0;
 }

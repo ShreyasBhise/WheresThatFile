@@ -120,6 +120,12 @@ int checkinput(int argc, char** argv){
 		else if (strcmp(argv[1], "upgrade") == 0 && argc == 3) {
 			return 10;
 		}
+		else if(strcmp(argv[1], "history") == 0 && argc == 3) {
+			return 11;
+		}
+		else if(strcmp(argv[1], "rollback") == 0 && argc == 4) {
+			return 12;
+		}
 	}
 	return -1;
 }
@@ -166,6 +172,12 @@ int main(int argc, char** argv){
 			break;
 		case 10: //upgrade
 			n = upgrade(sfd, argv[2]);
+			break;
+		case 11:
+			n = history(sfd, argv[2]);
+			break;
+		case 12:
+			n = rollback(sfd, argv[2], argv[3]);
 			break;
 	}
 //	printf("%s\t%d\n", ipaddress, port);
