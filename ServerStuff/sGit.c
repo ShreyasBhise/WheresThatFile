@@ -229,5 +229,25 @@ int push(int sockfd) {
 	lseek(newManfd, 0, SEEK_SET);
 	sendFile(sockfd, newManfd);
 	return 0;
-
+}
+int update(int sockfd){
+	char* buffer = getProjName(sockfd);
+	printf("%s\n", buffer);
+	if(!projectExists(buffer)){
+		printf("Project does not exist on server.\n");
+		write(sockfd, "0", 1);
+		return 1;
+	}
+	char manifestPath[256];
+	sprintf(manifestPath, "%s/.Manifest", buffer);	
+	int manfd = open(manifestPath, O_RDONLY);
+	if(manfd<0){
+		printf("Unable to open .Manifest\n");
+		write(sockfd, "0", 1);
+		return 1;
+	}
+	write(sockfd, "1", 1);
+	sendFile(sockfd, manfd);
+	write(sockfd, "\n\n", 2);
+	return 1;
 }

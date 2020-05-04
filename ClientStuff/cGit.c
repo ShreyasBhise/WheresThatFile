@@ -327,6 +327,94 @@ int pushCommit(int sfd, char* projName){
 	return 0;
 }
 int update(int sfd, char* projName) {
-	 
+	char fileName[256];
+	sprintf(fileName, "%s/.Manifest", projName);
+	int fd = open(fileName, O_RDONLY);
+	if(fd==-1){
+		printf("Error: unable to open client .Manifest");
+		write(sfd, "0 ", 2);
+		return 1;
+	}
+	int projVersion = readNum(fd);
+	node* clientroot = readManifest(fd);
+	write(sfd, "9 ", 2);
+	write(sfd, projName, strlen(projName));
+	char c;
+	read(sfd, &c, 1);
+	if(c!='1'){
+		printf("Error: project does not exist on server\n");
+		return 1;
+	}
+	int size = readNum(sfd);
+	printf("size: %d\n", size);
+	int serverProjVersion = readNum(sfd);
+	printf("Server Project Version: %d\n", serverProjVersion);
+	node* serverroot = readManifest(sfd);
+	char updateName[128];
+	char conflictName[128];
+	sprintf(updateName, "%s/.Update", projName);
+	sprintf(conflictName, "%s/.Conflict", conflictName);
+	char rmcmd[128];
+	sprintf(rmcmd, "rm %s", conflictName);
+	if(fileExists(conflictName)==0){
+		system(rmcmd);
+	}
+	//int cfd = open(conflictName, O_RDWR | O_CREAT, 00600);
+	int ufd = open(updateName, O_RDWR | O_CREAT, 00600);
+	if(serverProjVersion==projVersion){
+		write(1, "Everything Up to date.\n", strlen("Everything up to date.\n"));
+		system(rmcmd);
+		return 0;
+	}
+	node* ptr;
+	for(ptr = serverroot; ptr!=NULL; ptr = ptr->next){
+		node* match = getMatch(ptr->filePath, clientroot);
+		char updatebuffer[256+MD5_DIGEST_LENGTH];
+		if(match==NULL){ // entry exists on server but not client
+			printf("A %s\n", ptr->filePath);
+			sprintf(updatebuffer, "A\t%d\t%s\t%s\n", ptr->version, ptr->filePath, ptr->hash);
+			write(ufd, updatebuffer, strlen(updatebuffer));
+		} else { // entry exists on both client and server
+			int tempfd = open(match->filePath, O_RDONLY);
+			char* fileContents = readFile(tempfd);
+			char* hash = getHash(fileContents);
+			if(strcmp(hash, ptr->hash)==0){ // no change with server, does not need updating
+				close(tempfd);
+				continue;
+			}
+			if(strcmp(hash, match->hash)!=0){ // conclict exists
+				int cfd;
+				if(fileExists(conflictName)!=0){
+					cfd = open(conflictName, O_RDWR | O_CREAT, 00600);
+				} else {
+					cfd = open(conflictName, O_RDWR);
+					lseek(cfd, 0, SEEK_END);
+				}
+				printf("C %s\n", ptr->filePath);
+				sprintf(updatebuffer, "C\t%d\t%s\t%s\n", ptr->version, ptr->filePath, hash);
+				write(cfd, updatebuffer, strlen(updatebuffer));
+			} else {
+				printf("M %s\n", ptr->filePath);
+				sprintf(updatebuffer, "M\t%d\t%s\t%s\n", ptr->version, ptr->filePath, ptr->hash);
+				write(ufd, updatebuffer, strlen(updatebuffer));
+			}
+			close(tempfd);
+		}
+	}
+	for(ptr = clientroot; ptr!=NULL; ptr = ptr->next){
+		node* match = getMatch(ptr->filePath, serverroot);
+		char updatebuffer[256+MD5_DIGEST_LENGTH];
+		if(match==NULL){
+			printf("D %s\n", ptr->filePath);
+			sprintf(updatebuffer, "D\t%d\t%s\t%s\n", ptr->version, ptr->filePath, ptr->hash);
+			write(ufd, updatebuffer, strlen(updatebuffer));
+		}
+	}
+
+
+
+
+
+
 	return 0;
 }

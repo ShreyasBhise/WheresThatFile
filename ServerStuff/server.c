@@ -45,6 +45,9 @@ void* clientConnect(void* clientSockfd) {
 		case 8:
 			n = push(sockfd);
 			break;
+		case 9:
+			n = update(sockfd);
+			break;
 		default:
 			error("Invalid operation");
 			break;
