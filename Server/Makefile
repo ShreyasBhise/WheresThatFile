@@ -1,4 +1,4 @@
-aall: readManifest.o sUtil.o sGit.o
+all: readManifest.o sUtil.o sGit.o
 	gcc -I ../Client/ -o WTFServer server.c readManifest.o sUtil.o sGit.o -pthread
 readManifest.o:
 	gcc -I ../Client/ -c ../Client/readManifest.c -o readManifest.o
