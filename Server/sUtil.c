@@ -12,6 +12,11 @@
 #include"readManifest.h"
 #include"server.h"
 
+void displayMessage(char* function, char* pName) {
+	char message[256];
+	sprintf(message, "Client has requested to %s project %s.\n", function, pName);
+	write(1, message, strlen(message));
+}
 int isChanged(char* fileName, node* root){
 	node* ptr;
 	for(ptr = root; ptr!=NULL; ptr=ptr->next){

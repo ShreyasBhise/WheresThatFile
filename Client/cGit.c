@@ -67,7 +67,11 @@ int destroyProject(int sfd, char* projName){
 	int n = 0;
 	char* command = "2 ";
 	n = write(sfd, command, strlen(command));
-	n = write(sfd, projName, strlen(projName));
+
+	char* projSend = (char*) malloc(strlen(projName) + 2);
+	sprintf(projSend, "%s\t", projName);
+
+	n = write(sfd, projSend, strlen(projSend));
 	char c;
 	while((n=read(sfd, &c, 1))==0)
 	
@@ -83,7 +87,10 @@ int createProject(int sfd, char* projName){
 	int n = 0;
 	char* command = "1 ";
 	n = write(sfd, command, strlen(command));
-	n = write(sfd, projName, strlen(projName));
+	
+	char* projSend = (char*) malloc(strlen(projName) + 2);
+	sprintf(projSend, "%s\t", projName);
+	n = write(sfd, projSend, strlen(projSend));
 	char c;
 	while((n=read(sfd, &c, 1))==0){
 	}
@@ -109,7 +116,10 @@ int currentVersion(int sfd, char* projName) {
 	int n = 0;
 	char* command = "5 ";
 	n = write(sfd, command, 2);
-	n = write(sfd, projName, strlen(projName));
+
+	char* projSend = (char*) malloc(strlen(projName) + 2);
+	sprintf(projSend, "%s\t", projName);
+	n = write(sfd, projSend, strlen(projSend));
 	char c;
 	n = read(sfd, &c, 1);
 	if(c!='1'){
@@ -135,7 +145,10 @@ int checkout(int sfd, char* projName){
 	int n = 0;
 	char* command = "6 ";
 	n = write(sfd, command, 2);
-	n = write(sfd, projName, strlen(projName));
+	char* projSend = (char*) malloc(strlen(projName) + 2);
+	sprintf(projSend, "%s\t", projName);
+	n = write(sfd, projSend, strlen(projSend));
+
 	char c;
 	n = read(sfd, &c, 1);
 	if(c!='1'){
@@ -192,7 +205,9 @@ int commit(int sfd, char* projName){
 	node* clientroot = readManifest(fd);
 	close(fd); //}
 	write(sfd, "7 ", 2);
-	write(sfd, projName, strlen(projName));
+	char* projSend = (char*) malloc(strlen(projName) + 2);
+	sprintf(projSend, "%s\t", projName);
+	write(sfd, projSend, strlen(projSend));
 	char c;
 	read(sfd, &c, 1);
 	if(c!='1'){
@@ -237,7 +252,9 @@ int pushCommit(int sfd, char* projName){
 		return 1;
 	}
 	write(sfd, "8 ", 2);
-	write(sfd, projName, strlen(projName));
+	char* projSend = (char*) malloc(strlen(projName) + 2);
+	sprintf(projSend, "%s\t", projName);
+	write(sfd, projSend, strlen(projSend));
 	char c;
 	read(sfd, &c, 1);
 	if(c!='1'){
@@ -302,7 +319,9 @@ int update(int sfd, char* projName) {
 	node* clientroot = readManifest(fd);
 	close(fd); //}
 	write(sfd, "9 ", 2);
-	write(sfd, projName, strlen(projName));
+	char* projSend = (char*) malloc(strlen(projName) + 2);
+	sprintf(projSend, "%s\t", projName);
+	write(sfd, projSend, strlen(projSend));
 	char c;
 	read(sfd, &c, 1);
 	if(c!='1'){
@@ -405,7 +424,9 @@ int upgrade(int sfd, char* projName){
 		}
 	} 
 	write(sfd, "10 ", 3);
-	write(sfd, projName, strlen(projName));
+	char* projSend = (char*) malloc(strlen(projName) + 2);
+	sprintf(projSend, "%s\t", projName);
+	write(sfd, projSend, strlen(projSend));
 	char c;
 	read(sfd, &c, 1);
 	if(c!='1'){
@@ -449,8 +470,9 @@ int upgrade(int sfd, char* projName){
 }
 int history(int sfd, char* projName) { 
 	write(sfd, "11 ", 3);
-	write(sfd, projName, strlen(projName));
-	write(sfd, "\t", 1);
+	char* projSend = (char*) malloc(strlen(projName) + 2);
+	sprintf(projSend, "%s\t", projName);
+	write(sfd, projSend, strlen(projSend));
 	char c;
 	read(sfd, &c, 1);
 	if(c!='1'){

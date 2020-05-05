@@ -14,6 +14,7 @@ typedef struct projNode {
 
 projNode* projRoot;
 
+void displayMessage(char* function, char* pName);
 int isChanged (char *fileName, node *root);
 char *removeProjName (char *filePath);
 void writeCommit (int fd, node *root);

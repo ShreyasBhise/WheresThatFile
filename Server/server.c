@@ -15,6 +15,7 @@ pthread_mutex_t lock;
 
 void* clientConnect(void* clientSockfd) {
 	pthread_mutex_lock(&lock);
+	printf("New client connected!\n");
 	int sockfd = *((int *) clientSockfd);
 	int n;
 	int op = readNum(sockfd);
@@ -56,6 +57,7 @@ void* clientConnect(void* clientSockfd) {
 			error("Invalid operation");
 			break;
 	}
+	printf("Client disconnected.\n");
 	pthread_mutex_unlock(&lock);
 	return NULL;
 }
