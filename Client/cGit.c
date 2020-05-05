@@ -17,7 +17,7 @@ int addFile(char* projName, char* fileName) {
 	char manifestPath[256];
 	getPath(projName, ".Manifest", manifestPath);
 	getPath(projName, fileName, filePath);
-    if(projectExists(projName) == 0) {
+	if(projectExists(projName) == 0) {
 		printf("Error: Project does not exist locally.\n");
 		return -1;
 	}
@@ -25,26 +25,37 @@ int addFile(char* projName, char* fileName) {
 		printf("Error: File does not exist locally.\n");
 		return -1;
 	}
-	int manifest = open(manifestPath, O_RDWR | O_APPEND); //{
+	int manifest = open(manifestPath, O_RDWR); //{
 	int x = readNum(manifest);
 //	printf("In addFile: %d\t%c\n", x, x);
 	node* mList = readManifest(manifest);
 //	printf("created list\n");
-	
-	
+	char* manifestContents = readFile(manifest);
 	if(isFileAdded(mList, filePath)) {
+		char* fileLoc = strstr(manifestContents, filePath);
+		char c = *(fileLoc-4);
+		if(c=='D'){
+			*(fileLoc-4) = 'A';
+			lseek(manifest, 0, SEEK_SET);
+			write(manifest, manifestContents, strlen(manifestContents));
+			close(manifest);
+			printf("Successfully added file\n");
+			return 0;
+		}
 		printf("Error: File is already in manifest\n");
+		close(manifest);
 		return -1;
 	}
+	lseek(manifest, 0, SEEK_SET);
+	write(manifest, manifestContents, strlen(manifestContents));
 	int fileToAdd = open(filePath, O_RDONLY);
 	char* fileContents = readFile(fileToAdd);
 	close(fileToAdd);
 	char* hash = getHash(fileContents);
 	char toWrite[256];
 	sprintf(toWrite, "A\t0\t%s\t%s\n", filePath, hash);
-	
 	int n = write(manifest, toWrite, strlen(toWrite)); 
-	
+	printf("Successfully added file\n");
 	close(manifest); //}
 	return 1;
 
@@ -58,7 +69,6 @@ int removeFile(char* projName, char* fileName) {
 	int manifest = open(manifestPath, O_RDWR); //{
 	int x = readNum(manifest);
 	node* mList = readManifest(manifest);
-	close(manifest); //}
 	if(!isFileAdded(mList, filePath)) {
 		printf("File is not in manifest, cannot be removed.\n");
 		return 1;
@@ -68,6 +78,8 @@ int removeFile(char* projName, char* fileName) {
 	*(fileLoc - 4) = 'D';
 	lseek(manifest, 0, SEEK_SET);
 	int n = write(manifest, manifestContents, strlen(manifestContents));
+	close(manifest); //}
+	printf("Successfully removed file\n");
 	return 0;
 }
 int destroyProject(int sfd, char* projName){
@@ -178,6 +190,7 @@ int checkout(int sfd, char* projName){
 	char rmCall[256];
 	sprintf(rmCall, "rm %s", newName);
 	system(rmCall);
+	printf("Successfully checkout out %s.\n", projName);
 	return 0;
 }
 
@@ -274,7 +287,7 @@ int pushCommit(int sfd, char* projName){
 	lseek(fd, 0, SEEK_SET);
 	node* commitRoot = readManifest(fd); // commit is now contained in linked list
 	close(fd); //}
-	printManifest(commitRoot);
+	//printManifest(commitRoot);
 	node* ptr;
 	int elements = 0;
 	for(ptr = commitRoot; ptr!=NULL; ptr=ptr->next){
@@ -308,6 +321,8 @@ int pushCommit(int sfd, char* projName){
 	int manfd = open(manPath, O_RDWR | O_CREAT, 00600);
 	readBytes(sfd, size, newMan);
 	write(manfd, newMan, size);
+	printf("Successfully pushed changes.\n");
+	remove(commitName);
 	return 0;
 }
 int update(int sfd, char* projName) {
@@ -439,8 +454,7 @@ int upgrade(int sfd, char* projName){
 	}
 	int ufd = open(update, O_RDONLY); //{
 	node* updateRoot = readManifest(ufd);
-	close(ufd); //}
-	printManifest(updateRoot);
+	//printManifest(updateRoot);
 	node* ptr;
 	char cmd[256];
 	//For anything in the .Update that should be deleted, delete the file.
@@ -470,6 +484,8 @@ int upgrade(int sfd, char* projName){
 	sprintf(cmd2, "tar -xzf upgrade.tar.gz %s", projName);
 	system(cmd2);
 	system("rm upgrade.tar.gz");
+	close(ufd);
+	printf("Successfully upgraded to lastest version.\n");
 	return 0;
 }
 int history(int sfd, char* projName) { 
