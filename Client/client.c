@@ -176,14 +176,13 @@ int main(int argc, char** argv){
 		case 10: //upgrade
 			n = upgrade(sfd, argv[2]);
 			break;
-		case 11:
+		case 11: // histroy
 			n = history(sfd, argv[2]);
 			break;
-		case 12:
+		case 12: // rollback
 			n = rollback(sfd, argv[2], argv[3]);
 			break;
 	}
-//	printf("%s\t%d\n", ipaddress, port);
 	close(sfd);
 	printf("Disconnected from Server\n");
 	return 0;

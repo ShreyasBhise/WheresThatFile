@@ -48,7 +48,6 @@ char* readStr(int fd){
 		}
 		if(c=='\t' || c=='\n' || c==' '){
 			str[i]='\0';
-//			printf("%s\n", str);
 			return str;
 		}
 		if(i+1>=length){ // double length of char array
@@ -73,7 +72,6 @@ node* readManifest(int fd){
 	node* curr = root;
 	node* prev = NULL;
 	int count = 0, count2 = 0;
-//	lseek(fd, 2, SEEK_SET);
 	while(1){
 		char c[3];
 		int n;
@@ -84,13 +82,9 @@ node* readManifest(int fd){
 		if(c[0]=='\n') break;
 		c[2] = '\0';
 		curr->status = c[0];
-//		printf("Read status: %c.\n", curr->status);
 		curr->version = readNum(fd);
-//		printf("Read version: %d.\n", curr->version);
 		curr->filePath = readStr(fd);
-//		printf("Read filePath: %s.\n", curr->filePath);
 		curr->hash = readStr(fd);
-//		printf("Read hash: %s.\n", curr->hash);
 		if(prev!=NULL){
 			prev->next = curr;
 		}
