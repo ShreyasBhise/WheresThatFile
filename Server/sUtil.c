@@ -69,6 +69,17 @@ projNode* searchPNode(char* pName) { //Return pointer to the projectNode matchin
 	}
 	return NULL;
 }
+void freeCommits(commitNode* root){
+	commitNode* curr = root;
+	commitNode* next;
+	while(curr != NULL) {
+		next = curr->next;
+		free(curr);
+		curr = next;
+	}
+	root = NULL;
+	return;
+}
 char* getSize(int fd) {
 	int fileSize = lseek(fd, 0, SEEK_END);
 	lseek(fd, 0, SEEK_SET);

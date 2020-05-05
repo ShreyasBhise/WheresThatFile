@@ -255,7 +255,7 @@ int push(int sockfd) {
 
 	commitHistory(hfd, commitRoot);
 	close(hfd);
-
+	freeCommits(projCommitted->commitListRoot);
 	freeNodeList(commitRoot);
 	freeNodeList(manRoot);
 	cleanDirectory(buffer);

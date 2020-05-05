@@ -19,6 +19,7 @@ int isChanged (char *fileName, node *root);
 char *removeProjName (char *filePath);
 void writeCommit (int fd, node *root);
 projNode *searchPNode (char *pName);
+void freeCommits(commitNode* root);
 char *getSize (int fd);
 void sendFile (int sockfd, int fd);
 int projectExists (char *projectName);
