@@ -21,6 +21,10 @@ int addFile(char* projName, char* fileName) {
 		printf("Error: Project does not exist locally.\n");
 		return -1;
 	}
+	if(fileExists(filePath) == -1) {
+		printf("Error: File does not exist locally.\n");
+		return -1;
+	}
 	  
     int manifest = open(manifestPath, O_RDWR | O_APPEND); //{
 	int x = readNum(manifest);
