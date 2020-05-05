@@ -61,6 +61,7 @@ int currentVersion(int sockfd) {
 	displayMessage("get currentversion", buffer);
 	
 	if(projectExists(buffer)) {
+		write(sockfd, "1", 1);
 		char manifestPath[256];
 		sprintf(manifestPath, "%s/.Manifest", buffer);	
 		int manfd = open(manifestPath, O_RDONLY); //{
@@ -112,6 +113,7 @@ int checkout(int sockfd) {
 		 	
 	}	
 	write(sockfd, "0", 1);
+	return 0;
 }
 int commit(int sockfd){
 //	char* buffer = getProjName(sockfd);
@@ -307,7 +309,7 @@ int upgrade(int sockfd) {
 	write(sockfd, "1", 1);
 	int size = readNum(sockfd);
 	node* updateRoot = readManifest(sockfd); // .Update is now in linked list.
-	printManifest(updateRoot);
+//	printManifest(updateRoot);
 	node* ptr;
 	int elements = 0;
 	for(ptr = updateRoot; ptr != NULL; ptr = ptr->next) {
