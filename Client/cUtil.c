@@ -41,7 +41,7 @@ void sendFile(int sockfd, int fd) {
 	
 	char* buffer = (char*) malloc(size);
 	n = read(fd, buffer, size);
-	if (n <= 0) printf("Error: could not read file.");
+	if (n <= 0) printf("Error: could not read file.\n");
 	
 	n = write(sockfd, buffer, size);
 	printf("Sent .Commit to server\n");

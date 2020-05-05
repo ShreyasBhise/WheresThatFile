@@ -81,7 +81,7 @@ void sendFile(int sockfd, int fd) { // sends the size of the file, a space, then
 	char* sizeStr = getSize(fd);
 	int size = atoi(sizeStr);
 	write(sockfd, strcat(sizeStr, "\t"), strlen(sizeStr) + 1);
-	printf("Sent back to client [%s ]\n", sizeStr);
+//	printf("Sent back to client [%s ]\n", sizeStr);
 	char* buffer = malloc(size * sizeof(char) + 1);
 	n = read(fd, buffer, size);
 	if (n <= 0) { 
@@ -90,7 +90,7 @@ void sendFile(int sockfd, int fd) { // sends the size of the file, a space, then
  	}
 
 	n = write(sockfd, buffer, size);
-	printf("Sent back to client %d bytes [%s ]\n",size, buffer);
+//	printf("Sent back to client %d bytes [%s ]\n",size, buffer);
 }
 
 int projectExists(char* projectName) {

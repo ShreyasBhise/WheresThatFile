@@ -20,7 +20,6 @@ int addFile(char* projName, char* fileName) {
         
     int manifest = open(manifestPath, O_RDWR | O_APPEND); //{
 	int x = readNum(manifest);
-	close(manifest); //}
 	printf("In addFile: %d\t%c\n", x, x);
 	node* mList = readManifest(manifest);
 	printf("created list\n");
@@ -39,6 +38,7 @@ int addFile(char* projName, char* fileName) {
 	
 	int n = write(manifest, toWrite, strlen(toWrite)); 
 	
+	close(manifest); //}
 	return 1;
 
 }
@@ -237,7 +237,7 @@ int commit(int sfd, char* projName){
 		writeCommitFileClient(cfd, ptr, serverroot);
 	}
 	lseek(cfd, 0, SEEK_SET);
-	system("cat p3/.Commit");
+//	system("cat p3/.Commit");
 	sendFile(sfd, cfd);
 	close(cfd); //}
 	return 0;
@@ -419,7 +419,7 @@ int upgrade(int sfd, char* projName){
 		struct stat st;
 		stat(update, &st);
 		if(st.st_size == 0) {
-			printf("Project is up to date!");
+			printf("Project is up to date!\n");
 			return 0;
 		}
 	} 
@@ -492,7 +492,7 @@ int rollback(int sfd, char* projName, char* version) {
 	char* arguments = (char*)malloc(strlen(projName) + strlen(version) + 15);
 	sprintf(arguments, "%s\t%s\n", projName, version);
 	write(sfd, arguments, strlen(arguments));
-	printf("%s", arguments);
+//	printf("%s", arguments);
 	char c;
 	read(sfd, &c, 1);
 	if('0' == c) {
