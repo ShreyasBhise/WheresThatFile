@@ -44,7 +44,7 @@ void sendFile(int sockfd, int fd) {
 	if (n <= 0) printf("Error: could not read file.\n");
 	
 	n = write(sockfd, buffer, size);
-	printf("Sent .Commit to server\n");
+//	printf("Sent .Commit to server\n");
 	return;
 }
 void readBytes(int sfd, int x, void* buffer){
@@ -88,7 +88,7 @@ int readFileFromServer(int sfd, char** buffer){
 	free(sizeStr);
 	*buffer = (char*)malloc(size);
 	readBytes(sfd, size, (void*)*buffer);
-	printf("%d bytes\n", size);
+//	printf("%d bytes\n", size);
 	return size;
 }
 char* getHash(char* toHash) {
@@ -105,11 +105,11 @@ char* getHash(char* toHash) {
 	return hash;
 }
 int isFileAdded(node* root, char* filePath) {
-	printf("File path in isFileAdded: %s\n", filePath);
+//	printf("File path in isFileAdded: %s\n", filePath);
 	node* ptr;
 	int count = 0;
 	for(ptr = root; ptr != NULL; ptr = ptr->next) {
-		printf("isFileAdded: %d %s\n", count++, ptr->filePath);
+//		printf("isFileAdded: %d %s\n", count++, ptr->filePath);
 		if(strcmp(ptr->filePath, filePath) == 0) 
 			return 1;	
 	}

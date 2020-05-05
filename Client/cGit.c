@@ -25,10 +25,9 @@ int addFile(char* projName, char* fileName) {
 		printf("Error: File does not exist locally.\n");
 		return -1;
 	}
-	  
-    int manifest = open(manifestPath, O_RDWR | O_APPEND); //{
+	int manifest = open(manifestPath, O_RDWR | O_APPEND); //{
 	int x = readNum(manifest);
-	printf("In addFile: %d\t%c\n", x, x);
+//	printf("In addFile: %d\t%c\n", x, x);
 	node* mList = readManifest(manifest);
 //	printf("created list\n");
 	
@@ -166,7 +165,7 @@ int checkout(int sfd, char* projName){
 	int size = readNum(sfd);
 	char newName[256];
 	sprintf(newName, "%s.tar.gz", projName);
-	printf("%s\n", newName);
+//	printf("%s\n", newName);
 	int fd = open(newName, O_RDWR | O_CREAT, 00600); //{
 	char* file = (char*)malloc(size+1);
 	readBytes(sfd, size, file);
@@ -223,15 +222,14 @@ int commit(int sfd, char* projName){
 		return 1;
 	}
 	int size = readNum(sfd);
-	printf("size: %d\n", size);
+//	printf("size: %d\n", size);
 	int serverProjVersion = readNum(sfd);
-	printf("Server Project Version: %d\n", serverProjVersion);
+//	printf("Server Project Version: %d\n", serverProjVersion);
 	node* serverroot = readManifest(sfd);
-	printf("test3\n");
-	printf("Client Manifest:\n");
-	printManifest(clientroot);
-	printf("Server Manifest:\n");
-	printManifest(serverroot);
+//	printf("Client Manifest:\n");
+//	printManifest(clientroot);
+//	printf("Server Manifest:\n");
+//	printManifest(serverroot);
 	if(serverProjVersion!=projVersion){
 		printf("Server and Client project versions do not match, please update local project.\n");
 	}
@@ -239,8 +237,6 @@ int commit(int sfd, char* projName){
 	sprintf(commitFile, "%s/.Commit", projName);
 	int cfd = open(commitFile, O_RDWR | O_CREAT, 00600); //{
 	node* ptr;
-	printf("Changes:\n");
-	
 	for(ptr = clientroot; ptr != NULL; ptr = ptr->next) {
 		writeCommitFileClient(cfd, ptr, serverroot);
 	}
@@ -272,7 +268,7 @@ int pushCommit(int sfd, char* projName){
 	sendFile(sfd, fd);
 	read(sfd, &c, 1);
 	if(c!='1'){
-		printf("Error: Push failed. Please commit again.\n");
+		printf("Error: Push failed. Please commit again. .Commit either expired or does not exist.\n");
 		return 1;
 	}
 	lseek(fd, 0, SEEK_SET);
@@ -295,7 +291,7 @@ int pushCommit(int sfd, char* projName){
 			strcat(fileNames, " ");
 		}
 	}
-	printf("%s\n", fileNames);
+//	printf("%s\n", fileNames);
 	system(fileNames); // creates tar file push.tar.gz
 	int tarfd = open("push.tar.gz", O_RDONLY); //{
 	sendFile(sfd, tarfd);
@@ -337,9 +333,9 @@ int update(int sfd, char* projName) {
 		return 1;
 	}
 	int size = readNum(sfd);
-	printf("size: %d\n", size);
+//	printf("size: %d\n", size);
 	int serverProjVersion = readNum(sfd);
-	printf("Server Project Version: %d\n", serverProjVersion);
+//	printf("Server Project Version: %d\n", serverProjVersion);
 	node* serverroot = readManifest(sfd);
 	char updateName[128];
 	char conflictName[128];
@@ -464,7 +460,7 @@ int upgrade(int sfd, char* projName){
 
 	int tarSize = readNum(sfd);
 	char* tarFile = (char*)malloc(tarSize+1);
-	printf("%d\n", tarSize);
+//	printf("%d\n", tarSize);
 	read(sfd, tarFile, tarSize);
 	int tarfd = open("upgrade.tar.gz", O_RDWR | O_CREAT, 00600); //{
 	write(tarfd, tarFile, tarSize);
