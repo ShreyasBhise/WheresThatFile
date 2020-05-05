@@ -446,6 +446,7 @@ int upgrade(int sfd, char* projName){
 int history(int sfd, char* projName) { 
 	write(sfd, "11 ", 3);
 	write(sfd, projName, strlen(projName));
+	write(sfd, "\t", 1);
 	char c;
 	read(sfd, &c, 1);
 	if(c!='1'){
