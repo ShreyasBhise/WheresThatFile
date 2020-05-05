@@ -53,7 +53,7 @@ void readBytes(int sfd, int x, void* buffer){
 	while(bytesRead<x){
 		n = read(sfd, buffer+bytesRead, x-bytesRead);
 		if(n<0){
-			printf("Error: unable to read file completely");
+			printf("Error: unable to read file completely.\n");
 			exit(1);
 		}
 		bytesRead+=n;

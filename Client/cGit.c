@@ -17,17 +17,21 @@ int addFile(char* projName, char* fileName) {
 	char manifestPath[256];
 	getPath(projName, ".Manifest", manifestPath);
 	getPath(projName, fileName, filePath);
-        
+    if(projectExists(projName) == 0) {
+		printf("Error: Project does not exist locally.\n");
+		return -1;
+	}
+	  
     int manifest = open(manifestPath, O_RDWR | O_APPEND); //{
 	int x = readNum(manifest);
 	printf("In addFile: %d\t%c\n", x, x);
 	node* mList = readManifest(manifest);
-	printf("created list\n");
+//	printf("created list\n");
 	
 	
 	if(isFileAdded(mList, filePath)) {
 		printf("Error: File is already in manifest\n");
-		return 0;
+		return -1;
 	}
 	int fileToAdd = open(filePath, O_RDONLY);
 	char* fileContents = readFile(fileToAdd);
