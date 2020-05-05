@@ -37,9 +37,9 @@ int connectToServer(){
 	return sfd;
 }
 void getconfig(){
-	int fd = open("./.configure", O_RDONLY);
+	int fd = open("./.Configure", O_RDONLY);
 	if(fd<0){
-		printf("Error: failed to open .configure file");
+		printf("Error: failed to open .Configure file");
 		exit(1);
 	}
 	int curr = 0;
@@ -71,12 +71,14 @@ void getconfig(){
 }
 
 void config(char** argv){
-	printf("configuring ip\n");
-	int fd = open("./.configure", O_WRONLY | O_CREAT, 00600);
+	int fd = open("./.Configure", O_WRONLY | O_CREAT, 00600);
 	if(fd<0){
-		printf("Error: failed to create .configure file");
+		printf("Error: failed to create .Configure file");
 		exit(1);
 	}
+	char* configStr = (char*)malloc(128);
+	sprintf(configStr, "Configured to %s:%s\n", argv[2], argv[3]);
+	write(1, configStr, strlen(configStr));
 	write(fd, argv[2], strlen(argv[2]));
 	write(fd, "\t", 1);
 	write(fd, argv[3], strlen(argv[3]));

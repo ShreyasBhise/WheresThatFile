@@ -80,11 +80,10 @@ int destroyProject(int sfd, char* projName){
 
 	n = write(sfd, projSend, strlen(projSend));
 	char c;
-	while((n=read(sfd, &c, 1))==0)
-	
-	if(c == '1') printf("Project has been removed from the repository\n");
+	n=read(sfd, &c, 1);
+	if(c == '1') printf("Destroyed %s\n", projName);
 	else{
-		char errorMsg[128] = "Error: Project dpesm't exist on Server\n";
+		char errorMsg[128] = "Error: Project doesn't exist on server\n";
 		write(1, errorMsg, strlen(errorMsg));
 	}
 	return 0;
@@ -109,6 +108,7 @@ int createProject(int sfd, char* projName){
 		printf("Error\n");
 		return 1;
 	}
+	printf("Created %s\n", projName);
 	char** buffer = (char**)malloc(sizeof(char*));
 	int size = readFileFromServer(sfd, buffer);
 	char* filebuffer = (char*)malloc(256);
