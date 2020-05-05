@@ -22,8 +22,8 @@ int checkout (int sfd, char *projName);
 int commit (int sfd, char *projName);
 int pushCommit (int sfd, char *projName);
 int update (int sfd, char *projName);
-int history(int sfd, char* projName);
-int rollback(int sfd, char* projName, char* version);
+int history (int sfd, char* projName);
+int rollback (int sfd, char* projName, char* version);
 
 int connectToServer (void);
 void getconfig (void);

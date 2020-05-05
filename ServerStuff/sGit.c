@@ -35,11 +35,12 @@ int createProject(int sockfd) { /* Send 1 if the project does not exist, and a m
 	if(!projectExists(buffer)) {
 		write(sockfd, "1", 1);
 		mkdir(buffer, 0700);
-		
 		char backupDir[350];
 		sprintf(backupDir, "mkdir %s/.Backups", buffer);
 //		printf("%s\n", backupDir);
 		system(backupDir); 
+		int hist = open(".History", O_RDONLY | O_CREAT, 00600);
+		close(hist);
 		strcat(buffer, "/.Manifest");
 		int fd = open(buffer, O_RDWR | O_CREAT, 00600); //{
 		write(fd, "0\n", 2);

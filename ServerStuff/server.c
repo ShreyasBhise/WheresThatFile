@@ -20,13 +20,13 @@ void* clientConnect(void* clientSockfd) {
 	switch(op) {
 		case 0:
 			break;
-		case 1: //Create
+		case 1: 
 			n = createProject(sockfd);
 			break;
-		case 2:
+		case 2: 
 			n = destroyProject(sockfd);
 			break;
-		case 5:
+		case 5: 
 			n = currentVersion(sockfd);
 			break;
 		case 6:
