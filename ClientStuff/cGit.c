@@ -18,9 +18,9 @@ int addFile(char* projName, char* fileName) {
 	getPath(projName, ".Manifest", manifestPath);
 	getPath(projName, fileName, filePath);
         
-       	int manifest = open(manifestPath, O_RDWR | O_APPEND);
-	/*TODO: Check if the file exists in the Manifest */
+    int manifest = open(manifestPath, O_RDWR | O_APPEND); //{
 	int x = readNum(manifest);
+	close(manifest); //}
 	printf("In addFile: %d\t%c\n", x, x);
 	node* mList = readManifest(manifest);
 	printf("created list\n");
@@ -32,12 +32,11 @@ int addFile(char* projName, char* fileName) {
 	}
 	int fileToAdd = open(filePath, O_RDONLY);
 	char* fileContents = readFile(fileToAdd);
-
+	close(fileToAdd);
 	char* hash = getHash(fileContents);
-
 	char toWrite[256];
-		
 	sprintf(toWrite, "A\t0\t%s\t%s\n", filePath, hash);
+	
 	int n = write(manifest, toWrite, strlen(toWrite)); 
 	
 	return 1;
@@ -49,10 +48,10 @@ int removeFile(char* projName, char* fileName) {
         getPath(projName, ".Manifest", manifestPath);
         getPath(projName, fileName, filePath);	
 	
-	int manifest = open(manifestPath, O_RDWR);
+	int manifest = open(manifestPath, O_RDWR); //{
 	int x = readNum(manifest);
 	node* mList = readManifest(manifest);
-	
+	close(manifest); //}
 	if(!isFileAdded(mList, filePath)) {
 		printf("File is not in manifest, cannot be removed.\n");
 		return 1;
@@ -85,7 +84,6 @@ int createProject(int sfd, char* projName){
 	char* command = "1 ";
 	n = write(sfd, command, strlen(command));
 	n = write(sfd, projName, strlen(projName));
-//	printf("%s%s\n", command, str);
 	char c;
 	while((n=read(sfd, &c, 1))==0){
 	}
@@ -99,7 +97,6 @@ int createProject(int sfd, char* projName){
 	}
 	char** buffer = (char**)malloc(sizeof(char*));
 	int size = readFileFromServer(sfd, buffer);
-//	printf("%s", *buffer);
 	char* filebuffer = (char*)malloc(256);
 	strcpy(filebuffer, projName);
 	mkdir(filebuffer, 0700);
@@ -149,15 +146,17 @@ int checkout(int sfd, char* projName){
 	char newName[256];
 	sprintf(newName, "%s.tar.gz", projName);
 	printf("%s\n", newName);
-	int fd = open(newName, O_RDWR | O_CREAT, 00600);
+	int fd = open(newName, O_RDWR | O_CREAT, 00600); //{
 	char* file = (char*)malloc(size+1);
 	readBytes(sfd, size, file);
 	n = write(fd, file, size);
+	close(fd); //}
 	char sysCall[256];
-	char rmCall[256];
 	sprintf(sysCall, "tar -xzf %s", newName);
-	sprintf(rmCall, "rm %s", newName);
 	system(sysCall);
+
+	char rmCall[256];
+	sprintf(rmCall, "rm %s", newName);
 	system(rmCall);
 	return 0;
 }
@@ -183,7 +182,7 @@ int commit(int sfd, char* projName){
 	}
 	char fileName[256];
 	sprintf(fileName, "%s/.Manifest", projName);
-	int fd = open(fileName, O_RDONLY);
+	int fd = open(fileName, O_RDONLY); //{
 	if(fd==-1){
 		printf("Error: unable to open client .Manifest");
 		write(sfd, "0 ", 2);
@@ -191,6 +190,7 @@ int commit(int sfd, char* projName){
 	}
 	int projVersion = readNum(fd);
 	node* clientroot = readManifest(fd);
+	close(fd); //}
 	write(sfd, "7 ", 2);
 	write(sfd, projName, strlen(projName));
 	char c;
@@ -214,7 +214,7 @@ int commit(int sfd, char* projName){
 	}
 	char commitFile[256];
 	sprintf(commitFile, "%s/.Commit", projName);
-	int cfd = open(commitFile, O_RDWR | O_CREAT, 00600);
+	int cfd = open(commitFile, O_RDWR | O_CREAT, 00600); //{
 	node* ptr;
 	printf("Changes:\n");
 	
@@ -224,12 +224,13 @@ int commit(int sfd, char* projName){
 	lseek(cfd, 0, SEEK_SET);
 	system("cat p3/.Commit");
 	sendFile(sfd, cfd);
+	close(cfd); //}
 	return 0;
 }
 int pushCommit(int sfd, char* projName){
 	char commitName[256];
 	sprintf(commitName, "%s/.Commit", projName);
-	int fd = open(commitName, O_RDONLY);
+	int fd = open(commitName, O_RDONLY); //{
 	if(fd==-1){
 		printf("Error: unable to open client .Commit\n");
 		write(sfd, "0 ", 2);
@@ -251,6 +252,7 @@ int pushCommit(int sfd, char* projName){
 	}
 	lseek(fd, 0, SEEK_SET);
 	node* commitRoot = readManifest(fd); // commit is now contained in linked list
+	close(fd); //}
 	printManifest(commitRoot);
 	node* ptr;
 	int elements = 0;
@@ -270,8 +272,9 @@ int pushCommit(int sfd, char* projName){
 	}
 	printf("%s\n", fileNames);
 	system(fileNames); // creates tar file push.tar.gz
-	int tarfd = open("push.tar.gz", O_RDONLY);
+	int tarfd = open("push.tar.gz", O_RDONLY); //{
 	sendFile(sfd, tarfd);
+	close(tarfd); //}
 	char cmd[64] = "rm push.tar.gz";
 	system(cmd);
 	char cmd2[128];
@@ -289,7 +292,7 @@ int pushCommit(int sfd, char* projName){
 int update(int sfd, char* projName) {
 	char fileName[256];
 	sprintf(fileName, "%s/.Manifest", projName);
-	int fd = open(fileName, O_RDONLY);
+	int fd = open(fileName, O_RDONLY); //{
 	if(fd==-1){
 		printf("Error: unable to open client .Manifest");
 		write(sfd, "0 ", 2);
@@ -297,6 +300,7 @@ int update(int sfd, char* projName) {
 	}
 	int projVersion = readNum(fd);
 	node* clientroot = readManifest(fd);
+	close(fd); //}
 	write(sfd, "9 ", 2);
 	write(sfd, projName, strlen(projName));
 	char c;
@@ -319,8 +323,7 @@ int update(int sfd, char* projName) {
 	if(fileExists(conflictName)==0){
 		system(rmcmd);
 	}
-	//int cfd = open(conflictName, O_RDWR | O_CREAT, 00600);
-	int ufd = open(updateName, O_RDWR | O_CREAT, 00600);
+	int ufd = open(updateName, O_RDWR | O_CREAT, 00600); //{
 	if(serverProjVersion==projVersion){
 		write(1, "Everything Up to date.\n", strlen("Everything up to date.\n"));
 		return 0;
@@ -334,7 +337,7 @@ int update(int sfd, char* projName) {
 			sprintf(updatebuffer, "A\t%d\t%s\t%s\n", ptr->version, ptr->filePath, ptr->hash);
 			write(ufd, updatebuffer, strlen(updatebuffer));
 		} else { // entry exists on both client and server
-			int tempfd = open(match->filePath, O_RDONLY);
+			int tempfd = open(match->filePath, O_RDONLY); //{
 			char* fileContents = readFile(tempfd);
 //			printf("FILECONTENTS:%s\n", fileContents);
 			char* hash = getHash(fileContents);
@@ -343,11 +346,11 @@ int update(int sfd, char* projName) {
 				close(tempfd);
 				continue;
 			}
-			if(strcmp(hash, match->hash)!=0){ // conclict exists
-				int cfd;
+			if(strcmp(hash, match->hash)!=0){ // conflict exists
+				int cfd; //FD for conflict file. closed on line 350.
 				if(fileExists(conflictName)!=0){
 					cfd = open(conflictName, O_RDWR | O_CREAT, 00600);
-					printf("Comflicts Exist. They must be resolved before upgrading.\n");
+					printf("Conflicts Exist. They must be resolved before upgrading.\n");
 				} else {
 					cfd = open(conflictName, O_RDWR);
 					lseek(cfd, 0, SEEK_END);
@@ -360,7 +363,7 @@ int update(int sfd, char* projName) {
 				sprintf(updatebuffer, "M\t%d\t%s\t%s\n", ptr->version, ptr->filePath, ptr->hash);
 				write(ufd, updatebuffer, strlen(updatebuffer));
 			}
-			close(tempfd);
+			close(tempfd); //}
 		}
 	}
 	for(ptr = clientroot; ptr!=NULL; ptr = ptr->next){
@@ -373,7 +376,7 @@ int update(int sfd, char* projName) {
 		}
 	}
 
-
+	close(ufd); //opened on line 380.
 
 	return 0;
 }
@@ -409,13 +412,13 @@ int upgrade(int sfd, char* projName){
 		printf("Error: project does not exist on server\n");
 		return -1;
 	}
-	int ufd = open(update, O_RDONLY);
+	int ufd = open(update, O_RDONLY); //{
 	node* updateRoot = readManifest(ufd);
+	close(ufd); //}
 	printManifest(updateRoot);
 	node* ptr;
 	char cmd[256];
 	//For anything in the .Update that should be deleted, delete the file.
-	//TODO: Remove from manifest somehow idk
 	for(ptr = updateRoot; ptr != NULL; ptr = ptr->next) {
 		if(ptr->status == 'D' || ptr->status == 'M') {
 			sprintf(cmd, "rm %s", ptr->filePath);
@@ -434,13 +437,14 @@ int upgrade(int sfd, char* projName){
 	char* tarFile = (char*)malloc(tarSize+1);
 	printf("%d\n", tarSize);
 	read(sfd, tarFile, tarSize);
-	int tarfd = open("upgrade.tar.gz", O_RDWR | O_CREAT, 00600);
+	int tarfd = open("upgrade.tar.gz", O_RDWR | O_CREAT, 00600); //{
 	write(tarfd, tarFile, tarSize);
+	close(tarfd); //}
+
 	char cmd2[128];
 	sprintf(cmd2, "tar -xzf upgrade.tar.gz %s", projName);
 	system(cmd2);
 	system("rm upgrade.tar.gz");
-	//write(sfd, "\n\n", 2);
 	return 0;
 }
 int history(int sfd, char* projName) { 

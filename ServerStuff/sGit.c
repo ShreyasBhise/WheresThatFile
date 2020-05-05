@@ -11,12 +11,10 @@
 #include<fcntl.h>
 #include"readManifest.h"
 #include"server.h"
-#define print_message(msg, arg) printf("%s %s=%s\n", msg, #arg, arg)
 
 int destroyProject(int sockfd) { /*Send 1 if the project exists, and will be deleted. 0 if the project doesn't exist */
 	char* buffer = getProjName(sockfd);
 	if(!projectExists(buffer)) {
-//		printf("Project [%s] does not exist.\n", buffer);
 		write(sockfd, "0", 1);
 		return 0;	
 	}
@@ -37,7 +35,6 @@ int createProject(int sockfd) { /* Send 1 if the project does not exist, and a m
 		mkdir(buffer, 0700);
 		char backupDir[350];
 		sprintf(backupDir, "mkdir %s/.Backups", buffer);
-//		printf("%s\n", backupDir);
 		system(backupDir); 
 
 		char histPath[256];
@@ -51,7 +48,6 @@ int createProject(int sockfd) { /* Send 1 if the project does not exist, and a m
 		close(fd); //}
 		return 0;
 	}
-//	printf("Project already exists.\n");
 	write(sockfd, "0", 1);
 	return 1;
 }
@@ -67,7 +63,7 @@ int currentVersion(int sockfd) {
 		close(manfd); //}
 		char numElements[10];
 		sprintf(numElements, "%d\n", manifestSize);
-//		printf("num elements on server: %s\n", numElements);
+
 		write(sockfd, numElements, strlen(numElements));
 		node* ptr;
 		for(ptr = root; ptr!= NULL; ptr = ptr->next) {
@@ -83,7 +79,6 @@ int currentVersion(int sockfd) {
 		}
 		return 0;
 	}
-//	printf("Project does not exist on server.\n");	
 	write(sockfd, "0", 1);
 	return 1;
 
@@ -97,7 +92,6 @@ int checkout(int sockfd) {
 		char tarName[25];
 		sprintf(tarName, "%s.tar.gz", pName);
 		sprintf(sysCall, "tar -czf %s --exclude='.Backups/*' --exclude='.History' ./%s", tarName, pName);
-//		printf("tar file name: %s\n", tarName);
 		system(sysCall);
 		
 		int toSend = open(tarName, O_RDONLY); //{
@@ -113,9 +107,7 @@ int checkout(int sockfd) {
 }
 int commit(int sockfd){
 	char* buffer = getProjName(sockfd);
-//	printf("%s\n", buffer);
 	if(!projectExists(buffer)){
-//		printf("Project does not exist on server.\n");
 		write(sockfd, "0", 1);
 		return 1;
 	}
@@ -125,7 +117,6 @@ int commit(int sockfd){
 		projCommitted->projName = buffer;
 		projCommitted->commitListRoot = NULL;
 	}
-//	printf("test\n");
 	write(sockfd, "1", 1);
 	char manifestPath[256];
 	sprintf(manifestPath, "%s/.Manifest", buffer);	
@@ -152,9 +143,7 @@ int commit(int sockfd){
 }
 int push(int sockfd) {
 	char* buffer = getProjName(sockfd);
-	print_message("Project name", buffer);
 	if(!projectExists(buffer)){
-//		printf("Project does not exist on server.\n");
 		write(sockfd, "0", 1);
 		return 1;
 	}
@@ -171,8 +160,6 @@ int push(int sockfd) {
 	commitFile[x]='\0';
 	commitNode* ptr = projCommitted->commitListRoot;
 	while(ptr!=NULL){
-//		printf("%d, %d\n", ptr->size, x);
-//		printf("%d\n", memcmp(ptr->file, commitFile, x));
 		if(ptr->size==x){
 			if(memcmp(ptr->file, commitFile, x)==0){
 				printf("break successful\n");
@@ -258,9 +245,11 @@ int push(int sockfd) {
 	freeNodeList(commitRoot);
 	freeNodeList(manRoot);
 	cleanDirectory(buffer);
+
 	lseek(newManfd, 0, SEEK_SET);
 	sendFile(sockfd, newManfd);
 	int p = close(newManfd); //}
+
 	saveToBackups(buffer, projBackup);
 	return 0;
 }
@@ -291,7 +280,7 @@ int upgrade(int sockfd) {
 	printf("Project name (upgrade): %s\n", pName);
 	if(!projectExists(pName)) {
 		write(sockfd, "0", 1);
-		return 1;
+		return -1;
 	}
 	write(sockfd, "1", 1);
 	int size = readNum(sockfd);
@@ -315,6 +304,7 @@ int upgrade(int sockfd) {
 	system(fileNames); //Creates tar file update.tar.gz
 	int tarfd = open("update.tar.gz", O_RDONLY); //{
 	sendFile(sockfd, tarfd);	
+
 	close(tarfd); //}
 	remove("update.tar.gz");
 	return 0;
@@ -327,11 +317,13 @@ int history(int sockfd) {
 		return -1;
 	}
 	write(sockfd, "1", 1);
+
 	char hist[256];
 	sprintf(hist, "%s/.History", projName);
 	int hfd = open(hist, O_RDONLY); //{
 	sendFile(sockfd, hfd);
 	close(hfd); //}
+
 	return 0;
 }
 
@@ -357,21 +349,14 @@ int rollback(int sockfd) {
 	//Move backup tar to working directory, delete project, untar project, rename untar to projectname)
 	char sysCall[600];
 	sprintf(sysCall, "mv %s ./%s", backupPath, backupToSearch);
-	printf("executing: %s\n", sysCall);
-	printf("_____________________________________________________________\n");
 	system(sysCall);
 
 	char removeDir[256];
 	sprintf(removeDir, "rm -vr %s", projName);
-	printf("executing: %s\n", removeDir);
-	printf("_____________________________________________________________\n");
 	system(removeDir);
-//	mkdir(projName, S_IRWXU);
 
 	char untar[256];	
 	sprintf(untar, "tar -xzf %s", backupToSearch);
-	printf("executing: %s\n", untar);
-	printf("_____________________________________________________________\n");
 	system(untar);
 	remove(backupToSearch);
 

@@ -11,6 +11,7 @@
 #include<openssl/md5.h>
 #include"readManifest.h"
 #include"client.h"
+
 char* ipaddress;
 int port;
 
