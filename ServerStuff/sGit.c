@@ -41,9 +41,10 @@ int createProject(int sockfd) { /* Send 1 if the project does not exist, and a m
 //		printf("%s\n", backupDir);
 		system(backupDir); 
 		strcat(buffer, "/.Manifest");
-		int fd = open(buffer, O_RDWR | O_CREAT, 00600);
+		int fd = open(buffer, O_RDWR | O_CREAT, 00600); //{
 		write(fd, "0\n", 2);
 		sendFile(sockfd, fd);
+		close(fd); //}
 		return 0;
 	}
 //	printf("Project already exists.\n");
@@ -56,9 +57,10 @@ int currentVersion(int sockfd) {
 	if(projectExists(buffer)) {
 		char manifestPath[256];
 		sprintf(manifestPath, "%s/.Manifest", buffer);	
-		int manfd = open(manifestPath, O_RDONLY);
+		int manfd = open(manifestPath, O_RDONLY); //{
 		int x = readNum(manfd);
 		node* root = readManifest(manfd);
+		close(manfd); //}
 		char numElements[10];
 		sprintf(numElements, "%d\n", manifestSize);
 //		printf("num elements on server: %s\n", numElements);
@@ -94,9 +96,9 @@ int checkout(int sockfd) {
 //		printf("tar file name: %s\n", tarName);
 		system(sysCall);
 		
-		int toSend = open(tarName, O_RDONLY);
+		int toSend = open(tarName, O_RDONLY); //{
 		sendFile(sockfd, toSend);
-		close(toSend);
+		close(toSend); //}
 		bzero(sysCall, 256);
 		sprintf(sysCall, "rm %s", tarName);
 		system(sysCall);
@@ -123,9 +125,9 @@ int commit(int sockfd){
 	write(sockfd, "1", 1);
 	char manifestPath[256];
 	sprintf(manifestPath, "%s/.Manifest", buffer);	
-	int manfd = open(manifestPath, O_RDONLY);
+	int manfd = open(manifestPath, O_RDONLY); //{
 	sendFile(sockfd, manfd);
-	close(manfd);
+	close(manfd); //}
 	write(sockfd, "\n\n", 2);
 	int size = readNum(sockfd);
 	char* commitFile = (char*)malloc(size+1);
@@ -186,16 +188,17 @@ int push(int sockfd) {
 	int size = readNum(sockfd);
 	char* tarFile = (char*)malloc(size+1);
 	n = read(sockfd, tarFile, size);
-	int tarfd = open("push.tar.gz", O_RDWR | O_CREAT, 00600);
+	int tarfd = open("push.tar.gz", O_RDWR | O_CREAT, 00600); //{
 	write(tarfd, tarFile, size);
-	close(tarfd);
+	int m = close(tarfd); //}
+	printf("If tar is closed, should see 0 here: %d\n", m);
 	char manifestPath[256];
 	sprintf(manifestPath, "%s/.Manifest", buffer);	
 	print_message("manifest path: ", manifestPath);
-	int manfd = open(manifestPath, O_RDONLY);
+	int manfd = open(manifestPath, O_RDONLY); //{
 	int manversion = readNum(manfd);
 	node* manRoot = readManifest(manfd);
-	close(manfd);
+	close(manfd); //}
 	char cmd[128];
 	char projBackup[128];
 	sprintf(projBackup, "%s_%d", buffer, projNumber);
@@ -209,16 +212,12 @@ int push(int sockfd) {
 //	system(cmd3);
 	char commitPath[256];
 	sprintf(commitPath, "%s/.Commit", buffer);	
-	int commitfd = open(commitPath, O_RDWR | O_CREAT, 00600);
+	int commitfd = open(commitPath, O_RDWR | O_CREAT, 00600); //{
 	write(commitfd, commitFile, x);
 	lseek(commitfd, 0, SEEK_SET);
 	node* commitRoot = readManifest(commitfd);
-	close(commitfd);
-//	printf("Server Manifest:\n");
-//	printManifest(manRoot);
-//	printf("Commit File:\n");
-//	printManifest(commitRoot);
-	int newManfd = open(manifestPath, O_RDWR | O_CREAT, 00600);
+	int o = close(commitfd); //}
+	int newManfd = open(manifestPath, O_RDWR | O_CREAT, 00600); //{
 	char version[10];
 	sprintf(version, "%d\n", manversion+1);
 	write(newManfd, version, strlen(version));
@@ -238,17 +237,12 @@ int push(int sockfd) {
 		}
 	}	
 
-/*	char cmd4[128];	
-	sprintf(cmd4, "cp -r %s_%d/.Backups %s", buffer, projNumber, buffer);
-	system(cmd4);
-	char cmd5[128];
-	sprintf(cmd5, "mv %s_%d %s/.Backups/%s_%d", buffer, projNumber, buffer, buffer, projNumber);
-	system(cmd5); */
 	freeNodeList(commitRoot);
+	freeNodeList(manRoot);
 	cleanDirectory(buffer);
 	lseek(newManfd, 0, SEEK_SET);
 	sendFile(sockfd, newManfd);
-	close(newManfd);
+	int p = close(newManfd); //}
 	saveToBackups(buffer, projBackup);
 	return 0;
 }
@@ -262,7 +256,7 @@ int update(int sockfd){
 	}
 	char manifestPath[256];
 	sprintf(manifestPath, "%s/.Manifest", buffer);	
-	int manfd = open(manifestPath, O_RDONLY);
+	int manfd = open(manifestPath, O_RDONLY); //{
 	if(manfd<0){
 		printf("Unable to open .Manifest\n");
 		write(sockfd, "0", 1);
@@ -270,6 +264,7 @@ int update(int sockfd){
 	}
 	write(sockfd, "1", 1);
 	sendFile(sockfd, manfd);
+	close(manfd); //}
 	write(sockfd, "\n\n", 2);
 	return 1;
 }
@@ -300,9 +295,9 @@ int upgrade(int sockfd) {
 	}
 	printf("%s\n", fileNames);
 	system(fileNames); //Creates tar file update.tar.gz
-	int tarfd = open("update.tar.gz", O_RDONLY);
+	int tarfd = open("update.tar.gz", O_RDONLY); //{
 	sendFile(sockfd, tarfd);	
-	close(tarfd);
+	close(tarfd); //}
 	remove("update.tar.gz");
 	return 0;
 }

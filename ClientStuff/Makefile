@@ -1,4 +1,4 @@
-all: clean readManifest.o cGit.o cUtil.o
+all: readManifest.o cGit.o cUtil.o
 	gcc -o WTF client.c readManifest.o cGit.o cUtil.o -lssl -lcrypto
 readManifest.o:
 	gcc -c readManifest.c

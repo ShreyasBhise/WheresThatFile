@@ -141,6 +141,9 @@ void cleanDirectory(char* projName) {
 	}
 }
 void saveToBackups(char* projDir, char* backupDir) {
+	int fd = open("server.c", O_RDONLY);
+	printf("fd at start of saveToBackups: %d\n", fd);
+	close(fd);
 	//Tar backupDir, move tar to projDir/.Backups, delete backupDir
 	char sysCall[256];
 	char backuptar[50];
