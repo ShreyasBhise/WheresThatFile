@@ -11,8 +11,10 @@
 #include<fcntl.h>
 #include"readManifest.h"
 #include"server.h"
+pthread_mutex_t lock;
 
 void* clientConnect(void* clientSockfd) {
+	pthread_mutex_lock(&lock);
 	int sockfd = *((int *) clientSockfd);
 	int n;
 	int op = readNum(sockfd);
@@ -54,9 +56,11 @@ void* clientConnect(void* clientSockfd) {
 			error("Invalid operation");
 			break;
 	}
-//	return (void *) &op;
+	pthread_mutex_unlock(&lock);
+	return NULL;
 }
 int main(int argc, char** argv) {
+	pthread_mutex_init(&lock, NULL);
 	projRoot = NULL;
 	printf("Starting server\n");
 	int sockfd = -1; //fd for socket
