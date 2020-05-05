@@ -253,6 +253,7 @@ int push(int sockfd) {
 	saveToBackups(buffer, projBackup);
 	return 0;
 }
+
 int update(int sockfd){
 	char* buffer = getProjName(sockfd);
 	printf("%s\n", buffer);
