@@ -11,9 +11,6 @@
 #include<openssl/md5.h>
 #include"readManifest.h"
 #include"client.h"
-/*char* ipaddress;
-int port; */
-
 
 int projectExists(char* projectName){
 	struct stat st;
@@ -24,7 +21,6 @@ int projectExists(char* projectName){
 }
 int fileExists(char* filePath) {
 	return access(filePath, F_OK);	
-	//0 if file exists, -1 if not.
 }
 char* getSize(int fd) {
 	int fileSize = lseek(fd, 0, SEEK_END);
@@ -44,7 +40,6 @@ void sendFile(int sockfd, int fd) {
 	if (n <= 0) printf("Error: could not read file.\n");
 	
 	n = write(sockfd, buffer, size);
-//	printf("Sent .Commit to server\n");
 	return;
 }
 void readBytes(int sfd, int x, void* buffer){
@@ -63,11 +58,8 @@ void readBytes(int sfd, int x, void* buffer){
 char* readFile(int fd) {
 	int fileSize = lseek(fd, 0, SEEK_END);
 	lseek(fd, 0, SEEK_SET);
-
 	char* fileContents = malloc(fileSize+1);
 	int n = read(fd, fileContents, fileSize);
-//This is a comment
-
 	if(n != fileSize) printf("Error reading the file.\n");
 	fileContents[n] = '\0';
 	return fileContents;
@@ -88,7 +80,6 @@ int readFileFromServer(int sfd, char** buffer){
 	free(sizeStr);
 	*buffer = (char*)malloc(size);
 	readBytes(sfd, size, (void*)*buffer);
-//	printf("%d bytes\n", size);
 	return size;
 }
 char* getHash(char* toHash) {
@@ -105,11 +96,9 @@ char* getHash(char* toHash) {
 	return hash;
 }
 int isFileAdded(node* root, char* filePath) {
-//	printf("File path in isFileAdded: %s\n", filePath);
 	node* ptr;
 	int count = 0;
 	for(ptr = root; ptr != NULL; ptr = ptr->next) {
-//		printf("isFileAdded: %d %s\n", count++, ptr->filePath);
 		if(strcmp(ptr->filePath, filePath) == 0) 
 			return 1;	
 	}
@@ -139,7 +128,6 @@ int writeCommitFileClient(int cfd, node* ptr, node* serverroot) {
 				printf("Unable to find file in server .Manifest\n");
 				return 1;
 			}
-			// creating ptr->hash 
 			int fileToHash = open(ptr->filePath, O_RDONLY);
 			char* filecontents = readFile(fileToHash);
 			char* liveHash = getHash(filecontents); //This is the new hash of the file */

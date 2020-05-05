@@ -27,9 +27,7 @@ int addFile(char* projName, char* fileName) {
 	}
 	int manifest = open(manifestPath, O_RDWR); //{
 	int x = readNum(manifest);
-//	printf("In addFile: %d\t%c\n", x, x);
 	node* mList = readManifest(manifest);
-//	printf("created list\n");
 	char* manifestContents = readFile(manifest);
 	if(isFileAdded(mList, filePath)) {
 		char* fileLoc = strstr(manifestContents, filePath);
@@ -167,7 +165,6 @@ int checkout(int sfd, char* projName){
 	char* projSend = (char*) malloc(strlen(projName) + 2);
 	sprintf(projSend, "%s\t", projName);
 	n = write(sfd, projSend, strlen(projSend));
-
 	char c;
 	n = read(sfd, &c, 1);
 	if(c!='1'){
@@ -177,7 +174,6 @@ int checkout(int sfd, char* projName){
 	int size = readNum(sfd);
 	char newName[256];
 	sprintf(newName, "%s.tar.gz", projName);
-//	printf("%s\n", newName);
 	int fd = open(newName, O_RDWR | O_CREAT, 00600); //{
 	char* file = (char*)malloc(size+1);
 	readBytes(sfd, size, file);
@@ -186,7 +182,6 @@ int checkout(int sfd, char* projName){
 	char sysCall[256];
 	sprintf(sysCall, "tar -xzf %s", newName);
 	system(sysCall);
-
 	char rmCall[256];
 	sprintf(rmCall, "rm %s", newName);
 	system(rmCall);
@@ -235,14 +230,8 @@ int commit(int sfd, char* projName){
 		return 1;
 	}
 	int size = readNum(sfd);
-//	printf("size: %d\n", size);
 	int serverProjVersion = readNum(sfd);
-//	printf("Server Project Version: %d\n", serverProjVersion);
 	node* serverroot = readManifest(sfd);
-//	printf("Client Manifest:\n");
-//	printManifest(clientroot);
-//	printf("Server Manifest:\n");
-//	printManifest(serverroot);
 	if(serverProjVersion!=projVersion){
 		printf("Server and Client project versions do not match, please update local project.\n");
 	}
@@ -254,7 +243,6 @@ int commit(int sfd, char* projName){
 		writeCommitFileClient(cfd, ptr, serverroot);
 	}
 	lseek(cfd, 0, SEEK_SET);
-//	system("cat p3/.Commit");
 	sendFile(sfd, cfd);
 	close(cfd); //}
 	return 0;
@@ -287,7 +275,6 @@ int pushCommit(int sfd, char* projName){
 	lseek(fd, 0, SEEK_SET);
 	node* commitRoot = readManifest(fd); // commit is now contained in linked list
 	close(fd); //}
-	//printManifest(commitRoot);
 	node* ptr;
 	int elements = 0;
 	for(ptr = commitRoot; ptr!=NULL; ptr=ptr->next){
@@ -295,7 +282,6 @@ int pushCommit(int sfd, char* projName){
 			elements++;
 		}
 	}
-	//need to handle 0 elements case separately.
 	char* fileNames = (char*)malloc(128*elements);
 	strcat(fileNames, "tar -czf push.tar.gz ");
 	for(ptr = commitRoot; ptr!=NULL; ptr=ptr->next){
@@ -304,7 +290,6 @@ int pushCommit(int sfd, char* projName){
 			strcat(fileNames, " ");
 		}
 	}
-//	printf("%s\n", fileNames);
 	system(fileNames); // creates tar file push.tar.gz
 	int tarfd = open("push.tar.gz", O_RDONLY); //{
 	sendFile(sfd, tarfd);
@@ -348,9 +333,7 @@ int update(int sfd, char* projName) {
 		return 1;
 	}
 	int size = readNum(sfd);
-//	printf("size: %d\n", size);
 	int serverProjVersion = readNum(sfd);
-//	printf("Server Project Version: %d\n", serverProjVersion);
 	node* serverroot = readManifest(sfd);
 	char updateName[128];
 	char conflictName[128];
@@ -377,9 +360,7 @@ int update(int sfd, char* projName) {
 		} else { // entry exists on both client and server
 			int tempfd = open(match->filePath, O_RDONLY); //{
 			char* fileContents = readFile(tempfd);
-//			printf("FILECONTENTS:%s\n", fileContents);
 			char* hash = getHash(fileContents);
-//			printf("LIVE HASH: %s\n SERVER HASH: %s\n", hash, ptr->hash);
 			if(strcmp(hash, ptr->hash)==0){ // no change with server, does not need updating
 				close(tempfd);
 				continue;
@@ -413,9 +394,7 @@ int update(int sfd, char* projName) {
 			write(ufd, updatebuffer, strlen(updatebuffer));
 		}
 	}
-
 	close(ufd); //opened on line 380.
-
 	return 0;
 }
 int upgrade(int sfd, char* projName){
@@ -454,10 +433,8 @@ int upgrade(int sfd, char* projName){
 	}
 	int ufd = open(update, O_RDONLY); //{
 	node* updateRoot = readManifest(ufd);
-	//printManifest(updateRoot);
 	node* ptr;
 	char cmd[256];
-	//For anything in the .Update that should be deleted, delete the file.
 	for(ptr = updateRoot; ptr != NULL; ptr = ptr->next) {
 		if(ptr->status == 'D' || ptr->status == 'M') {
 			sprintf(cmd, "rm %s", ptr->filePath);
@@ -474,12 +451,10 @@ int upgrade(int sfd, char* projName){
 
 	int tarSize = readNum(sfd);
 	char* tarFile = (char*)malloc(tarSize+1);
-//	printf("%d\n", tarSize);
 	read(sfd, tarFile, tarSize);
 	int tarfd = open("upgrade.tar.gz", O_RDWR | O_CREAT, 00600); //{
 	write(tarfd, tarFile, tarSize);
 	close(tarfd); //}
-
 	char cmd2[128];
 	sprintf(cmd2, "tar -xzf upgrade.tar.gz %s", projName);
 	system(cmd2);
@@ -512,14 +487,12 @@ int rollback(int sfd, char* projName, char* version) {
 	char* arguments = (char*)malloc(strlen(projName) + strlen(version) + 15);
 	sprintf(arguments, "%s\t%s\n", projName, version);
 	write(sfd, arguments, strlen(arguments));
-//	printf("%s", arguments);
 	char c;
 	read(sfd, &c, 1);
 	if('0' == c) {
 		printf("Error: Project does not exist on server.\n");
 		return -1;
 	}
-	
 	read(sfd, &c, 1);
 	if('0' == c) {
 		printf("Error: Specified version does not exist on server.\n");
