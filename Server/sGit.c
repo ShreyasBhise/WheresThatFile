@@ -13,7 +13,6 @@
 #include"server.h"
 
 int destroyProject(int sockfd) { /*Send 1 if the project exists, and will be deleted. 0 if the project doesn't exist */
-//	char* buffer = getProjName(sockfd);
 	char* buffer = readStr(sockfd);
 	displayMessage("destroy", buffer);
 	if(!projectExists(buffer)) {
@@ -30,7 +29,6 @@ int destroyProject(int sockfd) { /*Send 1 if the project exists, and will be del
 	return 1;
 }
 int createProject(int sockfd) { /* Send 1 if the project does not exist, and a manifest is to be sent. 0 if project already exists. */
-//	char* buffer = getProjName(sockfd);
 	char* buffer = readStr(sockfd);
 	displayMessage("create", buffer);
 
@@ -56,7 +54,6 @@ int createProject(int sockfd) { /* Send 1 if the project does not exist, and a m
 	return 1;
 }
 int currentVersion(int sockfd) {
-//	char* buffer = getProjName(sockfd);
 	char* buffer = readStr(sockfd);
 	displayMessage("get currentversion", buffer);
 	
@@ -79,7 +76,6 @@ int currentVersion(int sockfd) {
 			char version[6];
 			sprintf(version, "%d", ptr->version);
 			sprintf(toWrite, "%s\t%s\n", version, fileName);
-//			printf("wrote to client [%s]", toWrite);
 			write(sockfd, toWrite, strlen(toWrite));
 			bzero(toWrite, 256);
 			bzero(version, 6);
@@ -91,7 +87,6 @@ int currentVersion(int sockfd) {
 
 } 
 int checkout(int sockfd) {
-//	char* pName = getProjName(sockfd);
 	char* pName = readStr(sockfd);
 	displayMessage("checkout", pName);
 	
@@ -116,7 +111,6 @@ int checkout(int sockfd) {
 	return 0;
 }
 int commit(int sockfd){
-//	char* buffer = getProjName(sockfd);
 	char* buffer = readStr(sockfd);
 	displayMessage("commit", buffer);
 
@@ -155,7 +149,6 @@ int commit(int sockfd){
 	return 0;
 }
 int push(int sockfd) {
-//	char* buffer = getProjName(sockfd);
 	char* buffer = readStr(sockfd);
 	displayMessage("push", buffer);
 
@@ -166,7 +159,6 @@ int push(int sockfd) {
 	write(sockfd, "1", 1);
 	projNode* projCommitted = searchPNode(buffer);
 	if(projCommitted==NULL){
-//		printf("2.Commit file does not match.\n");
 		write(sockfd, "0", 1);
 		return 1;
 	}
@@ -178,14 +170,12 @@ int push(int sockfd) {
 	while(ptr!=NULL){
 		if(ptr->size==x){
 			if(memcmp(ptr->file, commitFile, x)==0){
-	//			printf("break successful\n");
 				break;
 			}
 		}
 		ptr = ptr->next;
 	}
 	if(ptr==NULL){
-//		printf(".Commit file does not match or was expired.\n");
 		write(sockfd, "0", 1);
 		return 1;
 	}
@@ -239,7 +229,6 @@ int push(int sockfd) {
 			char moveFile[256];
 			char* newPath = removeProjName(ptr2->filePath);
 			sprintf(moveFile, "cp %s_%d%s %s", buffer, manversion, newPath, buffer);
-//			printf(moveFile);
 			system(moveFile);
 			char toWrite[256];
 			sprintf(toWrite, "M\t%d\t%s\t%s\n", ptr2->version, ptr2->filePath, ptr2->hash);
@@ -272,36 +261,31 @@ int push(int sockfd) {
 }
 
 int update(int sockfd){
-//	char* buffer = getProjName(sockfd);
 	char* buffer = readStr(sockfd);
 	displayMessage("update", buffer);
 
-//	printf("%s\n", buffer);
 	if(!projectExists(buffer)){
 		printf("Project does not exist on server.\n");
 		write(sockfd, "0", 1);
-		return 1;
+		return -1;
 	}
 	char manifestPath[256];
 	sprintf(manifestPath, "%s/.Manifest", buffer);	
 	int manfd = open(manifestPath, O_RDONLY); //{
 	if(manfd<0){
-	//	printf("Unable to open .Manifest\n");
 		write(sockfd, "0", 1);
-		return 1;
+		return -1;
 	}
 	write(sockfd, "1", 1);
 	sendFile(sockfd, manfd);
 	close(manfd); //}
 	write(sockfd, "\n\n", 2);
-	return 1;
+	return 0;
 }
 int upgrade(int sockfd) {
-//	char* pName = getProjName(sockfd);
 	char* pName = readStr(sockfd);
 	displayMessage("upgrade", pName);
 
-//	printf("Project name (upgrade): %s\n", pName);
 	if(!projectExists(pName)) {
 		write(sockfd, "0", 1);
 		return -1;
@@ -309,7 +293,6 @@ int upgrade(int sockfd) {
 	write(sockfd, "1", 1);
 	int size = readNum(sockfd);
 	node* updateRoot = readManifest(sockfd); // .Update is now in linked list.
-//	printManifest(updateRoot);
 	node* ptr;
 	int elements = 0;
 	for(ptr = updateRoot; ptr != NULL; ptr = ptr->next) {
@@ -318,13 +301,11 @@ int upgrade(int sockfd) {
 	}
 	char* fileNames = (char*) malloc(128 * elements);
 	sprintf(fileNames, "tar -czf update.tar.gz %s/.Manifest ", pName);
-//	printf("%s\n", fileNames);
 	for(ptr = updateRoot; ptr != NULL; ptr = ptr->next) {
 		if(ptr->status == 'M' || ptr->status == 'A')
 			strcat(fileNames, ptr->filePath);
 			strcat(fileNames, " ");
 	}
-//	printf("%s\n", fileNames);
 	system(fileNames); //Creates tar file update.tar.gz
 	int tarfd = open("update.tar.gz", O_RDONLY); //{
 	sendFile(sockfd, tarfd);	
@@ -355,10 +336,7 @@ int history(int sockfd) {
 
 int rollback(int sockfd) {
 	char* projName = readStr(sockfd);
-//	printf("rollback readStr %s\n", projName);
 	char* version = readStr(sockfd);
-//	printf("rollback readStr %s\n", version);
-//	printf("Read project %s and version %s\n", projName, version);
 	char msgBuff[30];
 	sprintf(msgBuff, "%s to version %s", projName, version);
 	displayMessage("rollback", msgBuff);

@@ -92,7 +92,6 @@ void sendFile(int sockfd, int fd) { // sends the size of the file, a space, then
 	char* sizeStr = getSize(fd);
 	int size = atoi(sizeStr);
 	write(sockfd, strcat(sizeStr, "\t"), strlen(sizeStr) + 1);
-//	printf("Sent back to client [%s ]\n", sizeStr);
 	char* buffer = malloc(size * sizeof(char) + 1);
 	n = read(fd, buffer, size);
 	if (n <= 0) { 
@@ -101,7 +100,6 @@ void sendFile(int sockfd, int fd) { // sends the size of the file, a space, then
  	}
 
 	n = write(sockfd, buffer, size);
-//	printf("Sent back to client %d bytes [%s ]\n",size, buffer);
 }
 
 int projectExists(char* projectName) {
@@ -110,17 +108,6 @@ int projectExists(char* projectName) {
 		return 1;
 	}
 	return 0;	
-}
-char* getProjName(int sockfd) {
-	char* buffer = (char *) malloc(256);
-	int n = 0;
-	while((n = read(sockfd, buffer, 255)) == 0)
-	if(n < 0) { 
-		return NULL; 
-	}
-	buffer[n] = '\0';
-	
-	return buffer;
 }
 char* extractFileNameFromPath(char* path) {
 	char* fileName = strrchr(path, '/');
@@ -172,21 +159,17 @@ void saveToBackups(char* projDir, char* backupDir) {
 	char backuptar[50];
 	sprintf(backuptar, "%s.tar.gz", backupDir);
 	sprintf(sysCall, "tar -czf %s ./%s", backuptar, backupDir);
-//	printf("Executing: %s\n", sysCall);
 	system(sysCall);
 	
 	char cmd[128];	
 	sprintf(cmd, "mv %s/.Backups %s", backupDir, projDir);
-//	printf("Executing: %s\n", cmd);
 	system(cmd);
 	
 	char cmd2[128];
 	sprintf(cmd2, "mv %s %s/.Backups/", backuptar, projDir);
-//	printf("Executing:  %s\n", cmd2);
 	system(cmd2);
 	
 	char removeDir[256];
 	sprintf(removeDir, "ls -lRa %s; rm -vrf %s", backupDir, backupDir);
-//	printf("Executing: %s\n", removeDir);
 	system(removeDir);
 }
