@@ -167,30 +167,26 @@ void cleanDirectory(char* projName) {
 	}
 }
 void saveToBackups(char* projDir, char* backupDir) {
-	int fd = open("server.c", O_RDONLY);
-	printf("fd at start of saveToBackups: %d\n", fd);
-	close(fd);
-
 	//Tar backupDir, move tar to projDir/.Backups, delete backupDir
 	char sysCall[256];
 	char backuptar[50];
 	sprintf(backuptar, "%s.tar.gz", backupDir);
 	sprintf(sysCall, "tar -czf %s ./%s", backuptar, backupDir);
-	printf("Executing: %s\n", sysCall);
+//	printf("Executing: %s\n", sysCall);
 	system(sysCall);
 	
 	char cmd[128];	
 	sprintf(cmd, "mv %s/.Backups %s", backupDir, projDir);
-	printf("Executing: %s\n", cmd);
+//	printf("Executing: %s\n", cmd);
 	system(cmd);
 	
 	char cmd2[128];
 	sprintf(cmd2, "mv %s %s/.Backups/", backuptar, projDir);
-	printf("Executing:  %s\n", cmd2);
+//	printf("Executing:  %s\n", cmd2);
 	system(cmd2);
 	
 	char removeDir[256];
 	sprintf(removeDir, "ls -lRa %s; rm -vrf %s", backupDir, backupDir);
-	printf("Executing: %s\n", removeDir);
+//	printf("Executing: %s\n", removeDir);
 	system(removeDir);
 }

@@ -15,11 +15,10 @@ pthread_mutex_t lock;
 
 void* clientConnect(void* clientSockfd) {
 	pthread_mutex_lock(&lock);
-	printf("New client connected!\n");
+	write(1, "New client connected!\n", 22);
 	int sockfd = *((int *) clientSockfd);
 	int n;
 	int op = readNum(sockfd);
-	printf("%d\n", op);
 	switch(op) {
 		case 0:
 			break;
@@ -57,14 +56,14 @@ void* clientConnect(void* clientSockfd) {
 			error("Invalid operation");
 			break;
 	}
-	printf("Client disconnected.\n");
+	write(1, "Client disconnected.\n", 21);
 	pthread_mutex_unlock(&lock);
 	return NULL;
 }
 int main(int argc, char** argv) {
 	pthread_mutex_init(&lock, NULL);
 	projRoot = NULL;
-	printf("Starting server\n");
+	write(1, "Starting server\n", 16);
 	int sockfd = -1; //fd for socket
 	int newsockfd = -1; //fd for client socket
 	int portno = -1; //server port to connect to
@@ -103,5 +102,6 @@ int main(int argc, char** argv) {
 		pthread_create(&newthread, NULL, &clientConnect, (void *)&newsockfd);
 		
 	}
+	write(1, "Closing server\n", 15);
 	return 0;
 }
