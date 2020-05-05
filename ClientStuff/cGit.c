@@ -441,11 +441,22 @@ int upgrade(int sfd, char* projName){
 	system(cmd2);
 	system("rm upgrade.tar.gz");
 	//write(sfd, "\n\n", 2);
-	
 	return 0;
 }
 int history(int sfd, char* projName) { 
-	//TODO: history function.
+	write(sfd, "11 ", 3);
+	write(sfd, projName, strlen(projName));
+	char c;
+	read(sfd, &c, 1);
+	if(c!='1'){
+		printf("Error: project does not exist on server\n");
+		return -1;
+	}
+	int size = readNum(sfd);
+	char* historyFile = (char*)malloc(size);
+	read(sfd, historyFile, size);
+	write(1, historyFile, size);
+	free(historyFile);
 	return 0;
 } 
 

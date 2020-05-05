@@ -10,11 +10,8 @@ typedef struct node{
 } node;
 void printManifest(node* root);
 char* readStr(int fd);
-char* readStrP(char* file, int* i);
 int readNum(int fd);
 char* readStr(int fd);
-int readNumP(char* file, int* i);
 node* readManifest(int fd);
-node* readManifestServer(char* file);
 
 #endif
