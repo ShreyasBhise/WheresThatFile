@@ -39,8 +39,11 @@ int createProject(int sockfd) { /* Send 1 if the project does not exist, and a m
 		sprintf(backupDir, "mkdir %s/.Backups", buffer);
 //		printf("%s\n", backupDir);
 		system(backupDir); 
-		int hist = open(".History", O_RDONLY | O_CREAT, 00600);
-		close(hist);
+
+		char histPath[256];
+		sprintf(histPath, "%s/.History", buffer);
+		int hist = open(histPath, O_RDONLY | O_CREAT, 00600); //{
+		close(hist); //}
 		strcat(buffer, "/.Manifest");
 		int fd = open(buffer, O_RDWR | O_CREAT, 00600); //{
 		write(fd, "0\n", 2);
@@ -93,7 +96,7 @@ int checkout(int sockfd) {
 		char sysCall[256];
 		char tarName[25];
 		sprintf(tarName, "%s.tar.gz", pName);
-		sprintf(sysCall, "tar -czf %s --exclude='.Backups/*' ./%s", tarName, pName);
+		sprintf(sysCall, "tar -czf %s --exclude='.Backups/*' --exclude='.History' ./%s", tarName, pName);
 //		printf("tar file name: %s\n", tarName);
 		system(sysCall);
 		
@@ -187,19 +190,21 @@ int push(int sockfd) {
 
 	write(sockfd, "1", 1);
 	int size = readNum(sockfd);
+
 	char* tarFile = (char*)malloc(size+1);
 	n = read(sockfd, tarFile, size);
 	int tarfd = open("push.tar.gz", O_RDWR | O_CREAT, 00600); //{
 	write(tarfd, tarFile, size);
-	int m = close(tarfd); //}
-	printf("If tar is closed, should see 0 here: %d\n", m);
+	close(tarfd); //}
+	
 	char manifestPath[256];
 	sprintf(manifestPath, "%s/.Manifest", buffer);	
-	print_message("manifest path: ", manifestPath);
+	
 	int manfd = open(manifestPath, O_RDONLY); //{
 	int manversion = readNum(manfd);
 	node* manRoot = readManifest(manfd);
 	close(manfd); //}
+
 	char cmd[128];
 	char projBackup[128];
 	sprintf(projBackup, "%s_%d", buffer, projNumber);
@@ -209,8 +214,7 @@ int push(int sockfd) {
 	char cmd2[128] = "tar -xzf push.tar.gz";
 	system(cmd2);
 	remove("push.tar.gz");
-//	char cmd3[64] = "rm push.tar.gz";
-//	system(cmd3);
+
 	char commitPath[256];
 	sprintf(commitPath, "%s/.Commit", buffer);	
 	int commitfd = open(commitPath, O_RDWR | O_CREAT, 00600); //{
@@ -218,11 +222,13 @@ int push(int sockfd) {
 	lseek(commitfd, 0, SEEK_SET);
 	node* commitRoot = readManifest(commitfd);
 	int o = close(commitfd); //}
+	
 	int newManfd = open(manifestPath, O_RDWR | O_CREAT, 00600); //{
 	char version[10];
 	sprintf(version, "%d\n", manversion+1);
 	write(newManfd, version, strlen(version));
 	writeCommit(newManfd, commitRoot);
+	
 	node* ptr2;
 	for(ptr2 = manRoot; ptr2!=NULL; ptr2 = ptr2->next){
 		int y = isChanged(ptr2->filePath, commitRoot);
@@ -237,6 +243,17 @@ int push(int sockfd) {
 			n = write(newManfd, toWrite, strlen(toWrite)); 
 		}
 	}	
+	char moveHist[256];
+	sprintf(moveHist, "cp %s_%d/.History %s", buffer, manversion, buffer);
+	system(moveHist);
+	
+	char historyPath[256];
+	sprintf(historyPath, "%s/.History", buffer);	
+	int hfd = open(historyPath, O_RDWR | O_APPEND);
+	write(hfd, version, strlen(version));
+
+	commitHistory(hfd, commitRoot);
+	close(hfd);
 
 	freeNodeList(commitRoot);
 	freeNodeList(manRoot);
@@ -304,7 +321,17 @@ int upgrade(int sockfd) {
 }
 
 int history(int sockfd) {
-
+	char* projName = readStr(sockfd);
+	if(!projectExists(projName)) {
+		write(sockfd, "0", 1);
+		return -1;
+	}
+	write(sockfd, "1", 1);
+	char hist[256];
+	sprintf(hist, "%s/.History", projName);
+	int hfd = open(hist, O_RDONLY); //{
+	sendFile(sockfd, hfd);
+	close(hfd); //}
 	return 0;
 }
 

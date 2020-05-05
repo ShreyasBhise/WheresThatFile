@@ -49,6 +49,15 @@ void writeCommit(int fd, node* root){
 	}
 	return;
 }
+void commitHistory(int fd, node* root);
+	node* ptr;
+	for(ptr = root; ptr!=NULL; ptr = ptr->next){
+		char toWrite[256];
+		sprintf(toWrite, "%c%d\t%s\t%s\n", ptr->status, ptr->version, ptr->filePath, ptr->hash);
+		int n = write(fd, toWrite, strlen(toWrite)); 
+	}
+	return;
+}
 projNode* searchPNode(char* pName) { //Return pointer to the projectNode matching the project name that is given.
 	projNode* ptr;
 	for(ptr = projRoot; ptr != NULL; ptr = ptr->next) {
