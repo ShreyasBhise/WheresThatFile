@@ -29,9 +29,9 @@ int connectToServer(){
 	serverAddressInfo.sin_family = AF_INET;
 	serverAddressInfo.sin_port = htons(port);
 	bcopy((char*)serverIPAddress->h_addr, (char*)&serverAddressInfo.sin_addr.s_addr, serverIPAddress->h_length);
-	if(connect(sfd, (struct sockaddr *)&serverAddressInfo, sizeof(serverAddressInfo))<0){
-		printf("Error connecting to server\n");
-		exit(1);
+	while(connect(sfd, (struct sockaddr *)&serverAddressInfo, sizeof(serverAddressInfo))<0){
+		printf("Connection Failed. Trying again in 3 seconds\n");
+		sleep(3);
 	}
 	printf("Connected to Server\n");
 	return sfd;
