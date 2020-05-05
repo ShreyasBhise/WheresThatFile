@@ -329,17 +329,27 @@ int rollback(int sockfd) {
 	//Move backup tar to working directory, delete project, untar project, rename untar to projectname)
 	char sysCall[600];
 	sprintf(sysCall, "mv %s ./%s", backupPath, backupToSearch);
-	printf("%s\n", sysCall);
+	printf("executing: %s\n", sysCall);
+	printf("_____________________________________________________________\n");
 	system(sysCall);
-	char removeDir[256];
-	sprintf(removeDir, "rm -r %s", projName);
-	system(removeDir);
-	mkdir(projName, S_IRWXU);
-	char untar[256];
-	
-	sprintf(untar, "tar -xzf %s %s", backupToSearch, projName);
-	printf("%s\n", untar);
-	system(untar);
 
+	char removeDir[256];
+	sprintf(removeDir, "rm -vr %s", projName);
+	printf("executing: %s\n", removeDir);
+	printf("_____________________________________________________________\n");
+	system(removeDir);
+//	mkdir(projName, S_IRWXU);
+
+	char untar[256];	
+	sprintf(untar, "tar -xzf %s", backupToSearch);
+	printf("executing: %s\n", untar);
+	printf("_____________________________________________________________\n");
+	system(untar);
+	remove(backupToSearch);
+
+	char rename[256];
+	sprintf(rename, "mv %s_%s %s", projName, version, projName);
+	system(rename);
+	write(sockfd, "1", 1);
 	return 0;
 }
