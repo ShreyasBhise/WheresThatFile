@@ -13,7 +13,7 @@ int main(int argc, char** argv){
 		system("cd Server; ./WTFServer localhost 6782");
 	} else { //Parent Process -> Should handle client.
 		system("cd Client");
-		int fd = open(".Commands", RD_ONLY);
+		int fd = open(".Commands", O_RDONLY);
 		char* cmd = (char*)malloc(256);
 		char c;
 		int n;
