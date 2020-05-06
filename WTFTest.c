@@ -44,6 +44,7 @@ int main(int argc, char** argv){
 				i++;
 			}
 		}
+		system("diff output.txt expectedOutput.txt");
 		close(fd);
 		free(cmd);
 		return 0;
