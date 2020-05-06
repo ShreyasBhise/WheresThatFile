@@ -16,8 +16,8 @@ echo "qwerty" > p1/file2.txt
 ./WTF push p1
 echo "hello world" > p1/file1.txt
 ./WTF remove p1 file2.txt
-./WTF commit p1)
-./WTF push p1)
+./WTF commit p1
+./WTF push p1
 ./WTF history p1
 ./WTF rollback p1 10
 ./WTF rollback p1 1
@@ -30,7 +30,7 @@ echo "123456" > p1/file3.txt
 ./WTF remove p1 file2.txt
 ./WTF commit p1
 ./WTF push p1
-rm -r p1)
-mv p1_Backup p1)
+rm -r p1
+mv p1_Backup p1
 ./WTF update p1
 ./WTF upgrade p1
