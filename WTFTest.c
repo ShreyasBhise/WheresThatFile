@@ -8,8 +8,9 @@ int main(int argc, char** argv){
 	int pid = fork();
 	
 	if(pid == 0) {//Child Process -> Should be server.
-		system("Server/WTFServer localhost 6782&");
+		system("cd Server; ./WTFServer localhost 6782");
 	} else { //Parent Process -> Should handle client.
+		system("cd Client");
 		int fd = open(".Commands", RD_ONLY);
 		char* cmd = (char*)malloc(256);
 		char c;
