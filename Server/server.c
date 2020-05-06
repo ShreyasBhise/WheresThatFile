@@ -74,13 +74,13 @@ int main(int argc, char** argv) {
 	struct sockaddr_in sAddrInfo; //holds address info for building server socket
 	struct sockaddr_in cAddrInfo; //holds address info for building client socket
 	
-	if(argc < 2) { error("no port provided."); }
+	if(argc < 2) { write(1, "no port provided.\n",strlen("no port provided.\n")); }
 
 	portno = atoi(argv[1]); //Convert text representation of port number
 	
 	/***SOCKET SET UP***/
 	sockfd = socket(AF_INET, SOCK_STREAM, 0);
-	if(sockfd < 0) { error("could not open socket."); }
+	if(sockfd < 0) { write(1, "could not open socket.\n", strlen("could not open socket.\n"); }
 
 	bzero((char *) &sAddrInfo, sizeof(sAddrInfo));
 	sAddrInfo.sin_port = htons(portno);
@@ -88,7 +88,7 @@ int main(int argc, char** argv) {
 	sAddrInfo.sin_addr.s_addr = INADDR_ANY;
 
 	/***SOCKET BINDING***/
-	if (bind(sockfd, (struct sockaddr *) &sAddrInfo, sizeof(sAddrInfo)) < 0) { error("Could not bind socket to port."); }
+	if (bind(sockfd, (struct sockaddr *) &sAddrInfo, sizeof(sAddrInfo)) < 0) { write(1, "Could not bind socket to port.\n", strlen("Could not bind socket to port.\n"); }
 
 	listen(sockfd, 0);
 
@@ -96,7 +96,7 @@ int main(int argc, char** argv) {
 	while(1) {
 		newsockfd = accept(sockfd, (struct sockaddr *) &cAddrInfo, &clilen);
 	
-		if(newsockfd < 0) { error("accept failed."); }
+		if(newsockfd < 0) { write(1, "accept failed.\n", strlen("accept failed.\n"); }
 	
 		pthread_t newthread;
 		pthread_create(&newthread, NULL, &clientConnect, (void *)&newsockfd);
