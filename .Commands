@@ -1,67 +1,36 @@
 ./WTF configure localhost 6782
-	./WTF create p1
-	(cat p1/.Manifest)
-	./WTF destroy p2
-	./WTF destroy p1
-(./WTF create p1) - we need a directory to test the rest of the deliverables.
-	(echo "asdf" > p1/file1.txt)
-	./WTF add p1 file1.txt
-	./WTF remove p1/file1.txt
-	./WTF add p1 file1.txt
-	./WTF add p1 file2.txt
-	(echo "qwerty" > p1/file2.txt)
-	./WTF add p1 file2.txt
-Testcase 11:
-	./WTF commit p1
-		- Outputs "A	p1/file1.txt
-			   A	p1/file2.txt"
-Testcase 12:
-	./WTF push p1
-		- Outputs "Successfully pushed changes"
-Testcase 13:
-	./WTF push p1
-		- Outputs "Error: Push failed. Please commit again. .Commit either expired or does not exist"
-Testcase 14:
-	(echo "hello world" > p1/file1.txt)
-	(./WTF remove p1 file2.txt)
-	(./WTF commit p1)
-	(./WTF push p1)
-	./WTF history p1
-		- Outputs "1
-			   A	1	p1/file1.txt	<file hash>
-			   A	1	p1/file2.txt	<file hash>
-			   2
-			   M	2	p1/file1.txt	<file hash>
-			   D	2	p1/file2.txt	<file hash>"
-Testcase 15:
-	./WTF rollback p1 10
-		- Outputs "Error: Specified version does not exist on server."
-Testcase 16:
-	./WTF rollback p1 1
-		- Outputs "Project p1 has ben rolled back to version 1."
-Testcase 17:
-	./WTF currentversion p1
-		- Outputs "Server Version: 2
-			   1	file1.txt
-			   1	file2.txt"
-Testcase 18:
-	(rm -r p1)
-	./WTF checkout p1
-		- Outputs "Successfully checked out p1"
-		- p1 exists in client directory, it is an exact copy of p1 in server directory.
-- Advanced: ------------------------------------------------------------------------------
-Testcase 19:
-	(cp -r p1 p1_Backup)
-	(echo "123456" > p1/file3.txt)
-	(./WTF add p1 file3.txt)
-	(./WTF remove p1 file2.txt)
-	(./WTF commit p1)
-	(./WTF push p1)
-	(rm -r p1)
-	(mv p1_Backup p1)
-	./WTF update p1
-		- Outputs "A	p1/file3.txt
-			   D	p1/file2.txt"
-Testcase 20:
-	./WTF upgrade p1
-		- Outputs "Successfully upgraded to latest version."
+./WTF create p1
+cat p1/.Manifest
+./WTF destroy p2
+./WTF destroy p1
+./WTF create p1
+echo "asdf" > p1/file1.txt)
+./WTF add p1 file1.txt
+./WTF remove p1/file1.txt
+./WTF add p1 file1.txt
+./WTF add p1 file2.txt
+echo "qwerty" > p1/file2.txt
+./WTF add p1 file2.txt
+./WTF commit p1
+./WTF push p1
+./WTF push p1
+echo "hello world" > p1/file1.txt
+./WTF remove p1 file2.txt)
+./WTF commit p1)
+./WTF push p1)
+./WTF history p1
+./WTF rollback p1 10
+./WTF rollback p1 1
+./WTF currentversion p1
+rm -r p1
+./WTF checkout p1
+cp -r p1 p1_Backup
+echo "123456" > p1/file3.txt
+./WTF add p1 file3.txt
+./WTF remove p1 file2.txt
+./WTF commit p1
+./WTF push p1
+rm -r p1)
+mv p1_Backup p1)
+./WTF update p1
+./WTF upgrade p1
