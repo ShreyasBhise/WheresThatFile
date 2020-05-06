@@ -80,7 +80,7 @@ int main(int argc, char** argv) {
 	
 	/***SOCKET SET UP***/
 	sockfd = socket(AF_INET, SOCK_STREAM, 0);
-	if(sockfd < 0) { write(1, "could not open socket.\n", strlen("could not open socket.\n"); }
+	if(sockfd < 0) { write(1, "could not open socket.\n", strlen("could not open socket.\n")); }
 
 	bzero((char *) &sAddrInfo, sizeof(sAddrInfo));
 	sAddrInfo.sin_port = htons(portno);
@@ -88,7 +88,7 @@ int main(int argc, char** argv) {
 	sAddrInfo.sin_addr.s_addr = INADDR_ANY;
 
 	/***SOCKET BINDING***/
-	if (bind(sockfd, (struct sockaddr *) &sAddrInfo, sizeof(sAddrInfo)) < 0) { write(1, "Could not bind socket to port.\n", strlen("Could not bind socket to port.\n"); }
+	if (bind(sockfd, (struct sockaddr *) &sAddrInfo, sizeof(sAddrInfo)) < 0) { write(1, "Could not bind socket to port.\n", strlen("Could not bind socket to port.\n")); }
 
 	listen(sockfd, 0);
 
@@ -96,7 +96,7 @@ int main(int argc, char** argv) {
 	while(1) {
 		newsockfd = accept(sockfd, (struct sockaddr *) &cAddrInfo, &clilen);
 	
-		if(newsockfd < 0) { write(1, "accept failed.\n", strlen("accept failed.\n"); }
+		if(newsockfd < 0) { write(1, "accept failed.\n", strlen("accept failed.\n")); }
 	
 		pthread_t newthread;
 		pthread_create(&newthread, NULL, &clientConnect, (void *)&newsockfd);
