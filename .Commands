@@ -1,36 +1,36 @@
-./WTF configure localhost 6782
-./WTF create p1
+./WTF configure localhost 6782 >> ../expectedOutput.txt
+./WTF create p1 >> ../expectedOutput.txt
 cat p1/.Manifest
-./WTF destroy p2
-./WTF destroy p1
-./WTF create p1
+./WTF destroy p2 >> ../expectedOutput.txt
+./WTF destroy p1 >> ../expectedOutput.txt
+./WTF create p1 >> ../expectedOutput.txt
 echo "asdf" > p1/file1.txt
-./WTF add p1 file1.txt
-./WTF remove p1/file1.txt
-./WTF add p1 file1.txt
-./WTF add p1 file2.txt
+./WTF add p1 file1.txt >> ../expectedOutput.txt
+./WTF remove p1/file1.txt >> ../expectedOutput.txt
+./WTF add p1 file1.txt >> ../expectedOutput.txt
+./WTF add p1 file2.txt >> ../expectedOutput.txt
 echo "qwerty" > p1/file2.txt
-./WTF add p1 file2.txt
-./WTF commit p1
-./WTF push p1
-./WTF push p1
+./WTF add p1 file2.txt >> ../expectedOutput.txt
+./WTF commit p1 >> ../expectedOutput.txt
+./WTF push p1 >> ../expectedOutput.txt
+./WTF push p1 >> ../expectedOutput.txt
 echo "hello world" > p1/file1.txt
-./WTF remove p1 file2.txt
-./WTF commit p1
-./WTF push p1
-./WTF history p1
-./WTF rollback p1 10
-./WTF rollback p1 1
-./WTF currentversion p1
+./WTF remove p1 file2.txt >> ../expectedOutput.txt
+./WTF commit p1 >> ../expectedOutput.txt
+./WTF push p1 >> ../expectedOutput.txt
+./WTF history p1 >> ../expectedOutput.txt
+./WTF rollback p1 10 >> ../expectedOutput.txt
+./WTF rollback p1 1 >> ../expectedOutput.txt
+./WTF currentversion p1 >> ../expectedOutput.txt
 rm -r p1
-./WTF checkout p1
+./WTF checkout p1 >> ../expectedOutput.txt
 cp -r p1 p1_Backup
 echo "123456" > p1/file3.txt
-./WTF add p1 file3.txt
-./WTF remove p1 file2.txt
-./WTF commit p1
-./WTF push p1
+./WTF add p1 file3.txt >> ../expectedOutput.txt
+./WTF remove p1 file2.txt >> ../expectedOutput.txt
+./WTF commit p1 >> ../expectedOutput.txt
+./WTF push p1 >> ../expectedOutput.txt
 rm -r p1
 mv p1_Backup p1
-./WTF update p1
-./WTF upgrade p1
+./WTF update p1 >> ../expectedOutput.txt
+./WTF upgrade p1 >> ../expectedOutput.txt

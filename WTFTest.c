@@ -18,8 +18,9 @@ int main(int argc, char** argv){
 	signal(SIGINT, exitHandle);
 	int pid = fork();
 	if(pid == 0) {//Child Process -> Should be server.
+		system("echo "" > serverLog");
 		chdir("./Server");
-		system("./WTFServer 6782 >> serverLog");
+		system("./WTFServer 6782 >> ../serverLog");
 		return 0;
 	} else { //Parent Process -> Should handle client.
 		childpid = pid;
@@ -34,8 +35,8 @@ int main(int argc, char** argv){
 			if(c=='\n'){
 				cmd[i]='\0';
 				char cmd2[300];
-				sprintf(cmd2, "%s >> output.txt", cmd);
-				system(cmd2);
+				sprintf(cmd2, "%s", cmd);
+				system(cmd);
 			//	sleep(3);
 				i = 0;
 				bzero(cmd, 255);
@@ -44,10 +45,16 @@ int main(int argc, char** argv){
 				i++;
 			}
 		}
-//		system("diff output.txt expectedOutput.txt");
+		chdir("..");
+		system("rm -r Client/p*; rm -r Server/p*");
+		int x = system("diff output.txt expectedOutput.txt");
+		if(x == 0) {
+			printf("All tests passed.\n");
+		}
+		system("echo "" > expectedOutput.txt");
 		close(fd);
 		free(cmd);
-		kill(0, SIGKILL);
+		kill(pid, SIGKILL);
 		return 0;
 	}
 	return 0;
