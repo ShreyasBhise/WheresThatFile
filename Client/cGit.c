@@ -50,7 +50,7 @@ int addFile(char* projName, char* fileName) {
 	char* fileContents = readFile(fileToAdd);
 	close(fileToAdd);
 	char* hash = getHash(fileContents);
-	char toWrite[256];
+	char toWrite[300];
 	sprintf(toWrite, "A\t0\t%s\t%s\n", filePath, hash);
 	int n = write(manifest, toWrite, strlen(toWrite)); 
 	printf("Successfully added file\n");
@@ -179,10 +179,10 @@ int checkout(int sfd, char* projName){
 	readBytes(sfd, size, file);
 	n = write(fd, file, size);
 	close(fd); //}
-	char sysCall[256];
+	char sysCall[300];
 	sprintf(sysCall, "tar -xzf %s", newName);
 	system(sysCall);
-	char rmCall[256];
+	char rmCall[300];
 	sprintf(rmCall, "rm %s", newName);
 	system(rmCall);
 	printf("Successfully checkout out %s.\n", projName);
@@ -339,7 +339,7 @@ int update(int sfd, char* projName) {
 	char conflictName[128];
 	sprintf(updateName, "%s/.Update", projName);
 	sprintf(conflictName, "%s/.Conflict", projName);
-	char rmcmd[128];
+	char rmcmd[150];
 	sprintf(rmcmd, "rm %s", conflictName);
 	if(fileExists(conflictName)==0){
 		system(rmcmd);
