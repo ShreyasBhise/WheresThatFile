@@ -12,7 +12,6 @@ int main(int argc, char** argv){
 	if(pid == 0) {//Child Process -> Should be server.
 		system("cd Server; ./WTFServer localhost 6782");
 	} else { //Parent Process -> Should handle client.
-		system("cd Client");
 		int fd = open(".Commands", O_RDONLY);
 		char* cmd = (char*)malloc(256);
 		char c;
@@ -21,7 +20,9 @@ int main(int argc, char** argv){
 		while((n = read(fd, &c, 1))>0){
 			if(c=='\n'){
 				cmd[i]='\0';
-				system(cmd);
+				char cmd2[300];
+				sprintf(cmd2, "cd Client; %s", cmd);
+				system(cmd2);
 				i = 0;
 				bzero(cmd, 255);
 			} else {
