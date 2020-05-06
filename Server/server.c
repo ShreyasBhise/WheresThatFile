@@ -53,7 +53,7 @@ void* clientConnect(void* clientSockfd) {
 			break;
 
 		default:
-			error("Invalid operation");
+			write(1,"Invalid operation\n", 18);
 			break;
 	}
 	write(1, "Client disconnected.\n", 21);
