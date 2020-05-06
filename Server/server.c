@@ -74,13 +74,19 @@ int main(int argc, char** argv) {
 	struct sockaddr_in sAddrInfo; //holds address info for building server socket
 	struct sockaddr_in cAddrInfo; //holds address info for building client socket
 	
-	if(argc < 2) { write(1, "no port provided.\n",strlen("no port provided.\n")); }
+	if(argc < 2) { 
+		write(1, "no port provided.\n",strlen("no port provided.\n")); 
+		return -1;
+	}
 
 	portno = atoi(argv[1]); //Convert text representation of port number
 	
 	/***SOCKET SET UP***/
 	sockfd = socket(AF_INET, SOCK_STREAM, 0);
-	if(sockfd < 0) { write(1, "could not open socket.\n", strlen("could not open socket.\n")); }
+	if(sockfd < 0) { 
+		write(1, "could not open socket.\n", strlen("could not open socket.\n")); 
+		return -1;
+	}
 
 	bzero((char *) &sAddrInfo, sizeof(sAddrInfo));
 	sAddrInfo.sin_port = htons(portno);
@@ -88,7 +94,10 @@ int main(int argc, char** argv) {
 	sAddrInfo.sin_addr.s_addr = INADDR_ANY;
 
 	/***SOCKET BINDING***/
-	if (bind(sockfd, (struct sockaddr *) &sAddrInfo, sizeof(sAddrInfo)) < 0) { write(1, "Could not bind socket to port.\n", strlen("Could not bind socket to port.\n")); }
+	if (bind(sockfd, (struct sockaddr *) &sAddrInfo, sizeof(sAddrInfo)) < 0) { 
+		write(1, "Could not bind socket to port.\n", strlen("Could not bind socket to port.\n")); 
+		return -1;
+	}
 
 	listen(sockfd, 0);
 

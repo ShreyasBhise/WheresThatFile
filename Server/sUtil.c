@@ -170,6 +170,6 @@ void saveToBackups(char* projDir, char* backupDir) {
 	system(cmd2);
 	
 	char removeDir[256];
-	sprintf(removeDir, "ls -lRa %s; rm -vrf %s", backupDir, backupDir);
+	sprintf(removeDir, "rm -vrf %s", backupDir);
 	system(removeDir);
 }

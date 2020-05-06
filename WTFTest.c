@@ -19,7 +19,7 @@ int main(int argc, char** argv){
 	int pid = fork();
 	if(pid == 0) {//Child Process -> Should be server.
 		chdir("./Server");
-		system("./WTFServer localhost 6782");
+		system("./WTFServer 6782 >> serverLog");
 		return 0;
 	} else { //Parent Process -> Should handle client.
 		childpid = pid;
@@ -34,9 +34,9 @@ int main(int argc, char** argv){
 			if(c=='\n'){
 				cmd[i]='\0';
 				char cmd2[300];
-				sprintf(cmd2, "cd Client; %s", cmd);
+				sprintf(cmd2, "%s >> output.txt", cmd);
 				system(cmd2);
-				sleep(3);
+			//	sleep(3);
 				i = 0;
 				bzero(cmd, 255);
 			} else {
@@ -44,9 +44,10 @@ int main(int argc, char** argv){
 				i++;
 			}
 		}
-		system("diff output.txt expectedOutput.txt");
+//		system("diff output.txt expectedOutput.txt");
 		close(fd);
 		free(cmd);
+		kill(0, SIGKILL);
 		return 0;
 	}
 	return 0;
