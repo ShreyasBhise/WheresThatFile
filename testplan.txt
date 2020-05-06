@@ -1,1 +1,2 @@
-How to use WTFtest or WTF is going on
+Testplan:
+The testcases described in testcases.txt are all executed in chronological order through WTFTest. WTFTest forks a child process in order to run the server, and then runs through each line in the .Commands file, using a system call to execute each one. These system calls go though each of the testcases, and pipes the output into a file called output.txt. It then compares this file with the output that should be expected, writing the diff value to STDOUT. 
