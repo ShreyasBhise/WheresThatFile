@@ -198,7 +198,7 @@ int push(int sockfd) {
 	node* manRoot = readManifest(manfd);
 	close(manfd); //}
 
-	char cmd[128];
+	char cmd[150];
 	char projBackup[128];
 	sprintf(projBackup, "%s_%d", buffer, projNumber);
 	sprintf(cmd, "mv %s %s", buffer, projBackup);
