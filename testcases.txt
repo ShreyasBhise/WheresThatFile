@@ -1,6 +1,6 @@
 - Compilation: ---------------------------------------------------------------------------
 Testcase 1:
-	Code compiles with "make"
+	Code compiles with "make" and "make test"
 		- Generates 3 executables: WTFTest, Client/WTF, and Server/WTFServer
 - Fundamental: ---------------------------------------------------------------------------
 Testcase 2:
